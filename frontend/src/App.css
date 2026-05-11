@@ -1,0 +1,174 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #fafaf9;
+  color: #1c1c1c;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+header {
+  padding: 1.25rem 1.25rem 0;
+}
+
+.app-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #bbb;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.results {
+  flex: 1;
+  padding: 1.5rem 1.25rem;
+  overflow-y: auto;
+}
+
+.hint {
+  color: #aaa;
+  font-size: 1rem;
+}
+
+.unknown {
+  color: #aaa;
+  font-style: italic;
+  font-size: 1rem;
+}
+
+/* example */
+
+.example-state {
+  opacity: 0.4;
+}
+
+.example-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+/* reading */
+
+.reading {
+  margin-bottom: 2rem;
+}
+
+.word-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.word-surface {
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: #1c1c1c;
+}
+
+.word-id {
+  font-size: 1rem;
+  color: #aaa;
+}
+
+/* morpheme chips */
+
+.morphemes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  min-width: 2.5rem;
+  opacity: 0;
+}
+
+.example-state .chip {
+  opacity: 1;
+}
+
+.chip--animate {
+  animation: chip-in 0.22s ease forwards;
+}
+
+@keyframes chip-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.chip-surface {
+  font-family: ui-monospace, monospace;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.chip-roles {
+  font-size: 0.68rem;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+/* category colours */
+
+.chip--stem      { background: #eeebe6; color: #1c1c1c; }
+.chip--tense     { background: #fef3c7; color: #92400e; }
+.chip--person    { background: #dbeafe; color: #1e40af; }
+.chip--voice     { background: #ede9fe; color: #5b21b6; }
+.chip--mood      { background: #fce7f3; color: #9d174d; }
+.chip--clitic    { background: #ccfbf1; color: #134e4a; }
+.chip--nonfinite { background: #e0e7ff; color: #3730a3; }
+.chip--case      { background: #dcfce7; color: #14532d; }
+.chip--number    { background: #ffedd5; color: #9a3412; }
+.chip--unlabeled { background: #f3f4f6; color: #9ca3af; }
+.chip--other     { background: #f3f4f6; color: #9ca3af; }
+
+/* input bar */
+
+.input-bar {
+  position: sticky;
+  bottom: 0;
+  background: #fafaf9;
+  border-top: 1px solid #e5e4e7;
+  padding: 0.75rem 1.25rem;
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+}
+
+input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1.1rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 10px;
+  background: white;
+  -webkit-appearance: none;
+}
+
+input:focus {
+  outline: 2px solid #3b82f6;
+  border-color: transparent;
+}
