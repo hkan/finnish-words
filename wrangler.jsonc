@@ -1,14 +1,35 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "finnish-words",
+  "main": "src/index.ts",
   "compatibility_date": "2026-05-11",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "containers": [
+    {
+      "class_name": "WordBreakdownContainer",
+      "image": "./Dockerfile.prod",
+      "max_instances": 1
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "WORD_BREAKDOWN",
+        "class_name": "WordBreakdownContainer"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["WordBreakdownContainer"]
+    }
+  ],
+
   "observability": {
     "enabled": true
-  },
-  "assets": {
-    "directory": "frontend"
-  },
-  "compatibility_flags": [
-    "nodejs_compat"
-  ]
+  }
 }
