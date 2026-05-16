@@ -44,7 +44,26 @@ _PAST_STEM_OVERRIDES = {
     "myydä": "my",   # myin, myi
     "lyödä": "lö",   # löin, löi
     "käydä": "käv",  # kävin, kävi (irregular v-stem)
+    "saada": "sa",   # sain, sai, saimme (vowel-shortened past stem)
 }
+
+# Verbs with strong/weak stem alternation in both present and past tense.
+# Weak stem appears with SG1/SG2/PL1/PL2 (1st/2nd-person endings),
+# strong stem with SG3/PL3 (3rd-person endings). Behaves type-3-like in
+# present tense (uses the `e` tense marker) despite the -dä infinitive.
+#   tehdä  present: te+e+n  / tek+ee   past: te+i+n  / tek+i
+#   nähdä  present: nä+e+n  / näk+ee   past: nä+i+n  / näk+i
+_ALT_STEMS = {
+    "tehdä": {"weak": "te", "strong": "tek"},
+    "nähdä": {"weak": "nä", "strong": "näk"},
+}
+
+
+def _alt_stem(lemma: str, pers: str) -> Optional[str]:
+    entry = _ALT_STEMS.get(lemma)
+    if entry is None:
+        return None
+    return entry["strong"] if pers in ("SG3", "PL3") else entry["weak"]
 
 # Consonant gradation patterns applied at the END of a stem when forming the
 # past tense. Many type-1 verbs (e.g. -ttaa, -taa) close their syllable in
@@ -251,7 +270,11 @@ def _build_past(work, root, features, lemma, segments_rev):
     # 3. Gradation candidates (drop final vowel + weak-grade cluster) for
     #    type-1 verbs like kirjoitta → kirjoit, anta → ann.
     stem_used = None
-    if lemma and lemma in _PAST_STEM_OVERRIDES:
+    if lemma and pers:
+        alt = _alt_stem(lemma, pers)
+        if alt is not None and work.startswith(alt):
+            stem_used = alt
+    if stem_used is None and lemma and lemma in _PAST_STEM_OVERRIDES:
         override = _PAST_STEM_OVERRIDES[lemma]
         if work.startswith(override):
             stem_used = override
@@ -306,6 +329,9 @@ def _build_present(work, root, features, lemma, segments_rev):
             "label": f"irregular present-tense form of {lemma}",
         })
         return list(reversed(segments_rev))
+
+    if lemma in _ALT_STEMS:
+        return _present_alt(work, lemma, pers, segments_rev)
 
     klass = _inflection_class(lemma)
 
@@ -381,6 +407,47 @@ def _present_type2(work, root, pers, segments_rev):
         "label": _PERSON_LABEL.get(pers, pers),
     })
     segments_rev.append({"surface": root, "role": "stem", "label": "root"})
+    return list(reversed(segments_rev))
+
+
+def _present_alt(work, lemma, pers, segments_rev):
+    """
+    Present tense for tehdä/nähdä-style verbs: type-3-like mechanics with
+    explicit weak/strong stem alternation per person.
+    """
+    stem = _alt_stem(lemma, pers)
+    if stem is None:
+        return None
+
+    if pers == "SG3":
+        if work != stem + "ee":
+            return None
+        segments_rev.append({
+            "surface": "e", "role": "person",
+            "label": _PERSON_LABEL["SG3"],
+        })
+        segments_rev.append({
+            "surface": "e", "role": "tense",
+            "label": "present tense marker (-e)",
+        })
+        segments_rev.append({"surface": stem, "role": "stem", "label": "root"})
+        return list(reversed(segments_rev))
+
+    popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
+    if popped is None:
+        return None
+    pers_surface, work = popped
+    if not pers_surface or work != stem + "e":
+        return None
+    segments_rev.append({
+        "surface": pers_surface, "role": "person",
+        "label": _PERSON_LABEL.get(pers, pers),
+    })
+    segments_rev.append({
+        "surface": "e", "role": "tense",
+        "label": "present tense marker (-e)",
+    })
+    segments_rev.append({"surface": stem, "role": "stem", "label": "root"})
     return list(reversed(segments_rev))
 
 

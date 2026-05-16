@@ -93,6 +93,42 @@ IRREGULAR_SAFE_6 = [
     ("kävin",  "käydä", "käv + i + n"),
     ("kävi",   "käydä", "käv + i"),
     ("kävimme","käydä", "käv + i + mme"),
+    ("sain",   "saada", "sa + i + n"),
+    ("sait",   "saada", "sa + i + t"),
+    ("sai",    "saada", "sa + i"),
+    ("saimme", "saada", "sa + i + mme"),
+    ("saivat", "saada", "sa + i + vat"),
+]
+
+# tehdä / nähdä — weak/strong stem alternation in both tenses.
+ALT_STEM_VERBS = [
+    # tehdä past
+    ("tein",      "tehdä", "te + i + n"),
+    ("teit",      "tehdä", "te + i + t"),
+    ("teki",      "tehdä", "tek + i"),
+    ("teimme",    "tehdä", "te + i + mme"),
+    ("tekivät",   "tehdä", "tek + i + vät"),
+    # tehdä present
+    ("teen",      "tehdä", "te + e + n"),
+    ("teet",      "tehdä", "te + e + t"),
+    ("tekee",     "tehdä", "tek + e + e"),
+    ("teemme",    "tehdä", "te + e + mme"),
+    ("teette",    "tehdä", "te + e + tte"),
+    ("tekevät",   "tehdä", "tek + e + vät"),
+    # nähdä past
+    ("näin",      "nähdä", "nä + i + n"),
+    ("näit",      "nähdä", "nä + i + t"),
+    ("näki",      "nähdä", "näk + i"),
+    ("näkivät",   "nähdä", "näk + i + vät"),
+    # nähdä present
+    ("näen",      "nähdä", "nä + e + n"),
+    ("näet",      "nähdä", "nä + e + t"),
+    ("näkee",     "nähdä", "näk + e + e"),
+    ("näemme",    "nähdä", "nä + e + mme"),
+    ("näkevät",   "nähdä", "näk + e + vät"),
+    # With clitics
+    ("teitkö",    "tehdä", "te + i + t + kö"),
+    ("näinkö",    "nähdä", "nä + i + n + kö"),
 ]
 
 # Fully irregular present-tense forms emitted as a single opaque chunk.
@@ -210,6 +246,7 @@ ALL_CHAIN_CASES = (
     + PRESENT_TENSE
     + PRESENT_GRADATION
     + PRESENT_IRREGULAR_FORMS
+    + ALT_STEM_VERBS
 )
 
 
@@ -230,11 +267,6 @@ def test_chain(client, word, expected_lemma, expected_chain):
 # --- Cases that should fall back (chain not built) ----------------------
 
 FALLBACK = [
-    # Tricky irregulars we haven't tabled yet
-    "näin", "tein",
-    # Present tense forms we don't support yet:
-    # - tehdä / nähdä irregular present stems
-    "teen", "näen",
     # Out of scope: infinitive (non-coinciding), participle, ma-infinitive
     "syömään", "tekevä", "luettu",
     # Nouns
