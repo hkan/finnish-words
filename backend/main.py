@@ -364,7 +364,7 @@ def analyse(word: str):
         word_id = lemmas[0] if lemmas else None
 
         root = get_verb_root(word_id) if upos in ("VERB", "AUX") and word_id else None
-        segments = build_segments(lookup, root, upos, raw_features) if root else None
+        segments = build_segments(lookup, root, upos, raw_features, lemma=word_id) if root else None
 
         parsed = humanize_analysis(parsed)
 

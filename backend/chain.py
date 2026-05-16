@@ -32,6 +32,19 @@ _PERSON_LABEL = {
     "PL3": "3rd person plural (they)",
 }
 
+# Past-tense stem overrides for irregular verbs whose past stem differs from
+# the dictionary form's root by more than the regular tense-marker addition.
+# These are "safe" cases — a clean vowel swap with no further alternation.
+# Keyed by lemma (word_id). Value is the past stem the chain should align on.
+_PAST_STEM_OVERRIDES = {
+    "syödä": "sö",   # söin, söi, söivät
+    "juoda": "jo",   # join, joi
+    "tuoda": "to",   # toin, toi
+    "viedä": "ve",   # vein, veivät
+    "myydä": "my",   # myin, myi
+    "lyödä": "lö",   # löin, löi
+}
+
 _CLITIC_LABEL = {
     "KO":   "question particle",
     "PA":   "emphatic particle",
@@ -56,7 +69,8 @@ def _pop_from_end(word: str, candidates: list[str]) -> Optional[tuple[str, str]]
     return None
 
 
-def build_segments(surface: str, root: str, upos: str, features: dict) -> Optional[list[dict]]:
+def build_segments(surface: str, root: str, upos: str, features: dict,
+                   lemma: Optional[str] = None) -> Optional[list[dict]]:
     """
     Build an ordered list of morpheme segments for a surface word.
     Returns None when we can't reliably segment (e.g. unsupported tense/mood).
@@ -107,9 +121,19 @@ def build_segments(surface: str, root: str, upos: str, features: dict) -> Option
                 "label": _PERSON_LABEL.get(pers, pers),
             })
 
-    if not work.startswith(root):
+    # Try the irregular past-stem override first (e.g. syödä → sö), then
+    # fall back to the regular root. The stem we pick is what appears in
+    # the surface; we keep the same "root" label since it's still the
+    # lemma's root, just in its past-tense form.
+    stem_used = root
+    if lemma and lemma in _PAST_STEM_OVERRIDES:
+        override = _PAST_STEM_OVERRIDES[lemma]
+        if work.startswith(override):
+            stem_used = override
+
+    if not work.startswith(stem_used):
         return None
-    tense_surface = work[len(root):]
+    tense_surface = work[len(stem_used):]
     if tense_surface:
         segments_rev.append({
             "surface": tense_surface,
@@ -117,6 +141,6 @@ def build_segments(surface: str, root: str, upos: str, features: dict) -> Option
             "label": f"past tense marker (-{tense_surface})",
         })
 
-    segments_rev.append({"surface": root, "role": "stem", "label": "root"})
+    segments_rev.append({"surface": stem_used, "role": "stem", "label": "root"})
 
     return list(reversed(segments_rev))
