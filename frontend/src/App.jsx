@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import "./App.css"
 
 const EXAMPLE = {
@@ -62,24 +62,15 @@ function Reading({ reading, word, animate }) {
 }
 
 export default function App() {
-  const params = new URLSearchParams(window.location.search)
-  const queryWord = params.get("word")
-
-  const [word, setWord] = useState(queryWord)
+  const initialParams = new URLSearchParams(window.location.search)
+  const [word, setWord] = useState(initialParams.get("word") || "")
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  // Sync word to URL query params
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (word.trim()) {
-      params.set("word", word.trim())
-    } else {
-      params.delete("word")
-    }
-    const newUrl = `${window.location.pathname}${params.toString() ? "?" + params.toString() : ""}`
-    window.history.pushState({}, "", newUrl)
-  }, [word])
+  // Set by the popstate handler so the next debounce-effect run fires the
+  // request immediately rather than waiting 1s — back/forward navigation
+  // represents a finalised intent, not in-progress typing.
+  const fireImmediately = useRef(false)
 
   async function fetchAnalysis(w) {
     setLoading(true)
@@ -89,12 +80,63 @@ export default function App() {
     setLoading(false)
   }
 
+  function clearWordUrl() {
+    const params = new URLSearchParams(window.location.search)
+    if (params.has("word")) {
+      params.delete("word")
+      const url = `${window.location.pathname}${params.toString() ? "?" + params : ""}`
+      window.history.pushState({}, "", url)
+    }
+  }
+
+  function handleInputChange(e) {
+    const v = e.target.value
+    setWord(v)
+    if (!v.trim()) {
+      setResult(null)
+      clearWordUrl()
+    }
+  }
+
+  // Debounced fetch + URL push for non-empty input. Empty-state cleanup is
+  // handled directly in the input/popstate handlers so this effect only
+  // synchronises external systems (history API + fetch).
   useEffect(() => {
     const trimmed = word.trim()
-    if (!trimmed) { setResult(null); return }
-    const timer = setTimeout(() => fetchAnalysis(trimmed), 1000)
+    if (!trimmed) return
+    const immediate = fireImmediately.current
+    fireImmediately.current = false
+
+    const run = () => {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get("word") !== trimmed) {
+        params.set("word", trimmed)
+        window.history.pushState({}, "", `${window.location.pathname}?${params}`)
+      }
+      fetchAnalysis(trimmed)
+    }
+
+    if (immediate) {
+      run()
+      return
+    }
+    const timer = setTimeout(run, 1000)
     return () => clearTimeout(timer)
   }, [word])
+
+  // Back/forward: mirror URL → state. Flag the next fetch to skip the
+  // 1s debounce since the URL change is finalised intent, not typing.
+  useEffect(() => {
+    const onPop = () => {
+      const params = new URLSearchParams(window.location.search)
+      const w = params.get("word") || ""
+      fireImmediately.current = true
+      setWord(w)
+      if (!w) setResult(null)
+    }
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [])
 
   const showExample = !word.trim() && !loading
 
@@ -129,7 +171,7 @@ export default function App() {
         <p className="input-hint">one Finnish word, lowercase, no punctuation</p>
         <input
           value={word}
-          onChange={(e) => setWord(e.target.value)}
+          onChange={handleInputChange}
           placeholder="Type a Finnish word…"
           autoFocus
           autoComplete="off"
