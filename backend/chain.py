@@ -1,4 +1,5 @@
 from typing import Optional
+from i18n import t
 
 # Clitic surface variants (vowel-harmony pairs). Back-harmonic listed first;
 # match against the actual word so we pick the surface that's present.
@@ -21,15 +22,6 @@ _PERSON_PAST_ACTIVE = {
     "PL1": ["mme"],
     "PL2": ["tte"],
     "PL3": ["vat", "vät"],
-}
-
-_PERSON_LABEL = {
-    "SG1": "1st person singular (I)",
-    "SG2": "2nd person singular (you)",
-    "SG3": "3rd person singular (he/she/it)",
-    "PL1": "1st person plural (we)",
-    "PL2": "2nd person plural (you)",
-    "PL3": "3rd person plural (they)",
 }
 
 # Past-tense stem overrides for irregular verbs whose past stem differs from
@@ -236,16 +228,6 @@ def _past_stem_candidates(root: str) -> list[str]:
                 candidates.append(without_v[: -len(strong)] + weak)
     return candidates
 
-_CLITIC_LABEL = {
-    "KO":   "question particle",
-    "PA":   "emphatic particle",
-    "KA":   "emphatic particle",
-    "KAAN": "additive negative particle",
-    "KIN":  "additive particle",
-    "HAN":  "discourse particle",
-    "S":    "emphatic particle",
-}
-
 
 def _pop_from_end(word: str, candidates: list[str]) -> Optional[tuple[str, str]]:
     """
@@ -261,7 +243,8 @@ def _pop_from_end(word: str, candidates: list[str]) -> Optional[tuple[str, str]]
 
 
 def build_segments(surface: str, root: str, upos: str, features: dict,
-                   lemma: Optional[str] = None) -> Optional[list[dict]]:
+                   lemma: Optional[str] = None,
+                   lang: str = "en") -> Optional[list[dict]]:
     """
     Build an ordered list of morpheme segments for a surface word.
     Returns None when we can't reliably segment (e.g. unsupported tense/mood).
@@ -296,17 +279,17 @@ def build_segments(surface: str, root: str, upos: str, features: dict,
         segments_rev.append({
             "surface": clit_surface,
             "role": "clitic",
-            "label": f"{_CLITIC_LABEL.get(clit_key, 'clitic')} (-{clit_surface})",
+            "label": t(f"clitic.{clit_key}", lang, surface=clit_surface),
         })
 
     if tense == "PAST":
-        return _build_past(work, root, features, lemma, segments_rev)
+        return _build_past(work, root, features, lemma, segments_rev, lang)
     if tense in ("PRES", "PRESENT"):
-        return _build_present(work, root, features, lemma, segments_rev)
+        return _build_present(work, root, features, lemma, segments_rev, lang)
     return None
 
 
-def _build_past(work, root, features, lemma, segments_rev):
+def _build_past(work, root, features, lemma, segments_rev, lang):
     pers = features.get("PERS")
     if pers:
         popped = _pop_from_end(work, _PERSON_PAST_ACTIVE.get(pers, []))
@@ -317,7 +300,7 @@ def _build_past(work, root, features, lemma, segments_rev):
             segments_rev.append({
                 "surface": pers_surface,
                 "role": "person",
-                "label": _PERSON_LABEL.get(pers, pers),
+                "label": t(f"person.{pers}", lang),
             })
 
     # Pick the stem that actually appears in the surface. Priority:
@@ -357,15 +340,15 @@ def _build_past(work, root, features, lemma, segments_rev):
         segments_rev.append({
             "surface": tense_surface,
             "role": "tense",
-            "label": f"past tense marker (-{tense_surface})",
+            "label": t("tense.past_marker", lang, surface=tense_surface),
         })
 
-    segments_rev.append({"surface": stem_used, "role": "stem", "label": "root"})
+    segments_rev.append({"surface": stem_used, "role": "stem", "label": t("stem.root", lang)})
 
     return list(reversed(segments_rev))
 
 
-def _build_present(work, root, features, lemma, segments_rev):
+def _build_present(work, root, features, lemma, segments_rev, lang):
     """
     Present indicative active. After clitics are already peeled, `work` is
     the bare verb form.
@@ -393,25 +376,25 @@ def _build_present(work, root, features, lemma, segments_rev):
             return None
         segments_rev.append({
             "surface": full, "role": "stem",
-            "label": f"irregular present-tense form of {lemma}",
+            "label": t("stem.irregular_present", lang, lemma=lemma),
         })
         return list(reversed(segments_rev))
 
     if lemma in _ALT_STEMS:
-        return _present_alt(work, lemma, pers, segments_rev)
+        return _present_alt(work, lemma, pers, segments_rev, lang)
 
     klass = _inflection_class(lemma)
 
     if klass == "TYPE1":
-        return _present_type1(work, lemma, pers, segments_rev)
+        return _present_type1(work, lemma, pers, segments_rev, lang)
     if klass == "TYPE2":
-        return _present_type2(work, root, pers, segments_rev)
+        return _present_type2(work, root, pers, segments_rev, lang)
     if klass == "TYPE4":
-        return _present_type4(work, lemma, pers, segments_rev)
-    return _present_type3(work, root, pers, segments_rev)
+        return _present_type4(work, lemma, pers, segments_rev, lang)
+    return _present_type3(work, root, pers, segments_rev, lang)
 
 
-def _present_type1(work, lemma, pers, segments_rev):
+def _present_type1(work, lemma, pers, segments_rev, lang):
     if len(lemma) < 2:
         return None
     strong = lemma[:-1]
@@ -425,9 +408,9 @@ def _present_type1(work, lemma, pers, segments_rev):
             return None
         segments_rev.append({
             "surface": strong[-1], "role": "person",
-            "label": _PERSON_LABEL["SG3"],
+            "label": t("person.SG3", lang),
         })
-        segments_rev.append({"surface": strong, "role": "stem", "label": "root"})
+        segments_rev.append({"surface": strong, "role": "stem", "label": t("stem.root", lang)})
         return list(reversed(segments_rev))
 
     popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
@@ -438,7 +421,7 @@ def _present_type1(work, lemma, pers, segments_rev):
         return None
     segments_rev.append({
         "surface": pers_surface, "role": "person",
-        "label": _PERSON_LABEL.get(pers, pers),
+        "label": t(f"person.{pers}", lang),
     })
 
     # PL3 stays strong (tietävät, antavat). Other persons prefer weak grade,
@@ -453,16 +436,16 @@ def _present_type1(work, lemma, pers, segments_rev):
 
     for cand in candidates:
         if cand and work == cand:
-            segments_rev.append({"surface": cand, "role": "stem", "label": "root"})
+            segments_rev.append({"surface": cand, "role": "stem", "label": t("stem.root", lang)})
             return list(reversed(segments_rev))
     return None
 
 
-def _present_type2(work, root, pers, segments_rev):
+def _present_type2(work, root, pers, segments_rev, lang):
     if pers == "SG3":
         if work != root:
             return None
-        segments_rev.append({"surface": root, "role": "stem", "label": "root"})
+        segments_rev.append({"surface": root, "role": "stem", "label": t("stem.root", lang)})
         return list(reversed(segments_rev))
 
     popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
@@ -473,13 +456,13 @@ def _present_type2(work, root, pers, segments_rev):
         return None
     segments_rev.append({
         "surface": pers_surface, "role": "person",
-        "label": _PERSON_LABEL.get(pers, pers),
+        "label": t(f"person.{pers}", lang),
     })
-    segments_rev.append({"surface": root, "role": "stem", "label": "root"})
+    segments_rev.append({"surface": root, "role": "stem", "label": t("stem.root", lang)})
     return list(reversed(segments_rev))
 
 
-def _present_alt(work, lemma, pers, segments_rev):
+def _present_alt(work, lemma, pers, segments_rev, lang):
     """
     Present tense for tehdä/nähdä-style verbs: type-3-like mechanics with
     explicit weak/strong stem alternation per person.
@@ -493,13 +476,13 @@ def _present_alt(work, lemma, pers, segments_rev):
             return None
         segments_rev.append({
             "surface": "e", "role": "person",
-            "label": _PERSON_LABEL["SG3"],
+            "label": t("person.SG3", lang),
         })
         segments_rev.append({
             "surface": "e", "role": "tense",
-            "label": "present tense marker (-e)",
+            "label": t("tense.present_marker", lang, surface="e"),
         })
-        segments_rev.append({"surface": stem, "role": "stem", "label": "root"})
+        segments_rev.append({"surface": stem, "role": "stem", "label": t("stem.root", lang)})
         return list(reversed(segments_rev))
 
     popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
@@ -510,17 +493,17 @@ def _present_alt(work, lemma, pers, segments_rev):
         return None
     segments_rev.append({
         "surface": pers_surface, "role": "person",
-        "label": _PERSON_LABEL.get(pers, pers),
+        "label": t(f"person.{pers}", lang),
     })
     segments_rev.append({
         "surface": "e", "role": "tense",
-        "label": "present tense marker (-e)",
+        "label": t("tense.present_marker", lang, surface="e"),
     })
-    segments_rev.append({"surface": stem, "role": "stem", "label": "root"})
+    segments_rev.append({"surface": stem, "role": "stem", "label": t("stem.root", lang)})
     return list(reversed(segments_rev))
 
 
-def _present_type4(work, lemma, pers, segments_rev):
+def _present_type4(work, lemma, pers, segments_rev, lang):
     """
     Type-4 present: strong stem + harmony vowel (lengthening) + person.
     pelata → pela + a + n → pelaan. SG3: pela + a → pelaa (the harmony
@@ -536,9 +519,9 @@ def _present_type4(work, lemma, pers, segments_rev):
             if work == stem + harmony:
                 segments_rev.append({
                     "surface": harmony, "role": "person",
-                    "label": _PERSON_LABEL["SG3"],
+                    "label": t("person.SG3", lang),
                 })
-                segments_rev.append({"surface": stem, "role": "stem", "label": "root"})
+                segments_rev.append({"surface": stem, "role": "stem", "label": t("stem.root", lang)})
                 return list(reversed(segments_rev))
         return None
 
@@ -552,31 +535,31 @@ def _present_type4(work, lemma, pers, segments_rev):
         if work == stem + harmony:
             segments_rev.append({
                 "surface": pers_surface, "role": "person",
-                "label": _PERSON_LABEL.get(pers, pers),
+                "label": t(f"person.{pers}", lang),
             })
             segments_rev.append({
                 "surface": harmony, "role": "tense",
-                "label": f"present tense marker (-{harmony})",
+                "label": t("tense.present_marker", lang, surface=harmony),
             })
-            segments_rev.append({"surface": stem, "role": "stem", "label": "root"})
+            segments_rev.append({"surface": stem, "role": "stem", "label": t("stem.root", lang)})
             return list(reversed(segments_rev))
     return None
 
 
-def _present_type3(work, root, pers, segments_rev):
+def _present_type3(work, root, pers, segments_rev, lang):
     if pers == "SG3":
         # men + e + e → menee. The trailing e acts as the SG3 marker.
         if work != root + "ee":
             return None
         segments_rev.append({
             "surface": "e", "role": "person",
-            "label": _PERSON_LABEL["SG3"],
+            "label": t("person.SG3", lang),
         })
         segments_rev.append({
             "surface": "e", "role": "tense",
-            "label": "present tense marker (-e)",
+            "label": t("tense.present_marker", lang, surface="e"),
         })
-        segments_rev.append({"surface": root, "role": "stem", "label": "root"})
+        segments_rev.append({"surface": root, "role": "stem", "label": t("stem.root", lang)})
         return list(reversed(segments_rev))
 
     popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
@@ -587,11 +570,11 @@ def _present_type3(work, root, pers, segments_rev):
         return None
     segments_rev.append({
         "surface": pers_surface, "role": "person",
-        "label": _PERSON_LABEL.get(pers, pers),
+        "label": t(f"person.{pers}", lang),
     })
     segments_rev.append({
         "surface": "e", "role": "tense",
-        "label": "present tense marker (-e)",
+        "label": t("tense.present_marker", lang, surface="e"),
     })
-    segments_rev.append({"surface": root, "role": "stem", "label": "root"})
+    segments_rev.append({"surface": root, "role": "stem", "label": t("stem.root", lang)})
     return list(reversed(segments_rev))

@@ -1,21 +1,69 @@
 import { useState, useEffect, useRef } from "react"
 import "./App.css"
 
-const EXAMPLE = {
-  word: "tiesitkö",
-  readings: [{
-    word_id: "tietää",
-    root: "tie",
-    segments: [
+const UI = {
+  en: {
+    appName: "Finnish Word Breakdown",
+    dictionaryForm: "dictionary form",
+    example: "Example",
+    unknownWord: "Unknown word.",
+    inputHint: "one Finnish word, lowercase, no punctuation",
+    placeholder: "Type a Finnish word…",
+    exampleSegments: [
       { surface: "tie", role: "stem",   label: "root" },
       { surface: "si",  role: "tense",  label: "past tense marker (-si)" },
       { surface: "t",   role: "person", label: "2nd person singular (you)" },
       { surface: "kö",  role: "clitic", label: "question particle (-kö)" },
     ],
-  }],
+  },
+  fi: {
+    appName: "Sanan rakenne",
+    dictionaryForm: "perusmuoto",
+    example: "Esimerkki",
+    unknownWord: "Tuntematon sana.",
+    inputHint: "yksi suomen sana, pienillä kirjaimilla, ilman välimerkkejä",
+    placeholder: "Kirjoita suomen sana…",
+    exampleSegments: [
+      { surface: "tie", role: "stem",   label: "vartalo" },
+      { surface: "si",  role: "tense",  label: "imperfektin tunnus (-si)" },
+      { surface: "t",   role: "person", label: "2. yksikön persoona (sinä)" },
+      { surface: "kö",  role: "clitic", label: "kysymysliite (-kö)" },
+    ],
+  },
+  tr: {
+    appName: "Fince Kelime Analizi",
+    dictionaryForm: "sözlük biçimi",
+    example: "Örnek",
+    unknownWord: "Bilinmeyen kelime.",
+    inputHint: "bir Fince kelime, küçük harfle, noktalama işareti olmadan",
+    placeholder: "Bir Fince kelime yazın…",
+    exampleSegments: [
+      { surface: "tie", role: "stem",   label: "kök" },
+      { surface: "si",  role: "tense",  label: "geçmiş zaman eki (-si)" },
+      { surface: "t",   role: "person", label: "2. tekil şahıs (sen)" },
+      { surface: "kö",  role: "clitic", label: "soru ekimi (-kö)" },
+    ],
+  },
 }
 
-function Reading({ reading, word, animate }) {
+const SUPPORTED_LANGS = Object.keys(UI)
+const DEFAULT_LANG = "en"
+
+function getLangFromUrl() {
+  const params = new URLSearchParams(window.location.search)
+  const l = params.get("lang")
+  return SUPPORTED_LANGS.includes(l) ? l : null
+}
+
+function getInitialLang() {
+  return (
+    getLangFromUrl() ||
+    (SUPPORTED_LANGS.includes(localStorage.getItem("lang")) && localStorage.getItem("lang")) ||
+    DEFAULT_LANG
+  )
+}
+
+function Reading({ reading, word, animate, ui }) {
   const segments = reading.segments
   return (
     <div className="reading">
@@ -25,7 +73,7 @@ function Reading({ reading, word, animate }) {
       {reading.word_id && (
         <div className="lemma-row">
           <span className="lemma-form">{reading.word_id}</span>
-          <span className="lemma-label">dictionary form</span>
+          <span className="lemma-label">{ui.dictionaryForm}</span>
         </div>
       )}
       {segments ? (
@@ -66,16 +114,19 @@ export default function App() {
   const [word, setWord] = useState(initialParams.get("word") || "")
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [lang, setLang] = useState(getInitialLang)
+
+  const ui = UI[lang] || UI[DEFAULT_LANG]
 
   // Set by the popstate handler so the next debounce-effect run fires the
   // request immediately rather than waiting 1s — back/forward navigation
   // represents a finalised intent, not in-progress typing.
   const fireImmediately = useRef(false)
 
-  async function fetchAnalysis(w) {
+  async function fetchAnalysis(w, l) {
     setLoading(true)
     setResult(null)
-    const res = await fetch(`/analyse?word=${encodeURIComponent(w)}`)
+    const res = await fetch(`/analyse?word=${encodeURIComponent(w)}&lang=${l}`)
     setResult(await res.json())
     setLoading(false)
   }
@@ -98,9 +149,25 @@ export default function App() {
     }
   }
 
-  // Debounced fetch + URL push for non-empty input. Empty-state cleanup is
-  // handled directly in the input/popstate handlers so this effect only
-  // synchronises external systems (history API + fetch).
+  function handleLangChange(l) {
+    setLang(l)
+    localStorage.setItem("lang", l)
+    // Re-fetch current word in new language immediately
+    const trimmed = word.trim()
+    if (trimmed) {
+      fireImmediately.current = true
+    }
+    // Update URL lang param
+    const params = new URLSearchParams(window.location.search)
+    if (l === DEFAULT_LANG) {
+      params.delete("lang")
+    } else {
+      params.set("lang", l)
+    }
+    window.history.pushState({}, "", `${window.location.pathname}${params.toString() ? "?" + params : ""}`)
+  }
+
+  // Debounced fetch + URL push for non-empty input.
   useEffect(() => {
     const trimmed = word.trim()
     if (!trimmed) return
@@ -113,7 +180,7 @@ export default function App() {
         params.set("word", trimmed)
         window.history.pushState({}, "", `${window.location.pathname}?${params}`)
       }
-      fetchAnalysis(trimmed)
+      fetchAnalysis(trimmed, lang)
     }
 
     if (immediate) {
@@ -122,16 +189,17 @@ export default function App() {
     }
     const timer = setTimeout(run, 1000)
     return () => clearTimeout(timer)
-  }, [word])
+  }, [word, lang])
 
-  // Back/forward: mirror URL → state. Flag the next fetch to skip the
-  // 1s debounce since the URL change is finalised intent, not typing.
+  // Back/forward: mirror URL → state.
   useEffect(() => {
     const onPop = () => {
       const params = new URLSearchParams(window.location.search)
       const w = params.get("word") || ""
+      const l = params.get("lang")
       fireImmediately.current = true
       setWord(w)
+      if (l && SUPPORTED_LANGS.includes(l)) setLang(l)
       if (!w) setResult(null)
     }
     window.addEventListener("popstate", onPop)
@@ -143,14 +211,30 @@ export default function App() {
   return (
     <main>
       <header>
-        <span className="app-name">Finnish Word Breakdown</span>
+        <span className="app-name">{ui.appName}</span>
+        <div className="lang-picker">
+          {SUPPORTED_LANGS.map(l => (
+            <button
+              key={l}
+              className={`lang-btn${lang === l ? " lang-btn--active" : ""}`}
+              onClick={() => handleLangChange(l)}
+            >
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </header>
 
       <div className="results">
         {showExample && (
           <div className="example-state">
-            <p className="example-label">Example</p>
-            <Reading reading={EXAMPLE.readings[0]} word={EXAMPLE.word} animate={false} />
+            <p className="example-label">{ui.example}</p>
+            <Reading
+              reading={{ word_id: "tietää", segments: ui.exampleSegments }}
+              word="tiesitkö"
+              animate={false}
+              ui={ui}
+            />
           </div>
         )}
 
@@ -158,21 +242,21 @@ export default function App() {
 
         {result && (
           result.unknown ? (
-            <p className="unknown">Unknown word.</p>
+            <p className="unknown">{ui.unknownWord}</p>
           ) : (
             result.readings.map((reading, i) => (
-              <Reading key={i} reading={reading} word={result.word} animate={true} />
+              <Reading key={i} reading={reading} word={result.word} animate={true} ui={ui} />
             ))
           )
         )}
       </div>
 
       <div className="input-bar">
-        <p className="input-hint">one Finnish word, lowercase, no punctuation</p>
+        <p className="input-hint">{ui.inputHint}</p>
         <input
           value={word}
           onChange={handleInputChange}
-          placeholder="Type a Finnish word…"
+          placeholder={ui.placeholder}
           autoFocus
           autoComplete="off"
           autoCorrect="off"

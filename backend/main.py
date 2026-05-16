@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from libvoikko import Voikko
 from stem import get_verb_root
 from chain import build_segments
+from i18n import t, SUPPORTED_LANGS
 
 voikko = Voikko("fi")
 
@@ -66,34 +67,27 @@ _TENSE_MAP = {
     "present_simple": "PRESENT",
 }
 
-_FEATURE_LABELS = {
-    "TENSE": {"PAST": "past tense", "PRESENT": "present tense"},
+_FEATURE_KEY_MAP = {
+    "TENSE": {"PAST": "feature.tense.PAST", "PRESENT": "feature.tense.PRESENT"},
     "MOOD": {
-        "INDV": "indicative mood",
-        "COND": "conditional mood",
-        "IMPV": "imperative mood",
-        "POTN": "potential mood",
-        "INFA": "infinitive I (a-infinitive)",
-        "INFE": "infinitive II (e-infinitive)",
-        "INFMA": "infinitive III (ma-infinitive)",
+        "INDV": "feature.mood.INDV", "COND": "feature.mood.COND",
+        "IMPV": "feature.mood.IMPV", "POTN": "feature.mood.POTN",
+        "INFA": "feature.mood.INFA", "INFE": "feature.mood.INFE",
+        "INFMA": "feature.mood.INFMA",
     },
-    "VOICE": {"ACT": "active voice", "PASS": "passive voice"},
+    "VOICE": {"ACT": "feature.voice.ACT", "PASS": "feature.voice.PASS"},
     "PERS": {
-        "SG1": "1st person singular",
-        "SG2": "2nd person singular",
-        "SG3": "3rd person singular",
-        "PL1": "1st person plural",
-        "PL2": "2nd person plural",
-        "PL3": "3rd person plural",
-        "SG0": "impersonal (0th person)",
+        "SG1": "feature.pers.SG1", "SG2": "feature.pers.SG2", "SG3": "feature.pers.SG3",
+        "PL1": "feature.pers.PL1", "PL2": "feature.pers.PL2", "PL3": "feature.pers.PL3",
+        "SG0": "feature.pers.SG0",
     },
-    "NUM": {"SG": "singular", "PL": "plural"},
+    "NUM": {"SG": "feature.num.SG", "PL": "feature.num.PL"},
     "CASE": {
-        "NOM": "nominative", "GEN": "genitive", "PAR": "partitive",
-        "INE": "inessive (in)", "ELA": "elative (out of)", "ILL": "illative (into)",
-        "ADE": "adessive (on)", "ABL": "ablative (from)", "ALL": "allative (onto)",
-        "ESS": "essive", "TRA": "translative", "INS": "instructive",
-        "ABE": "abessive (without)", "COM": "comitative (together with)", "ACC": "accusative",
+        "NOM": "feature.case.NOM", "GEN": "feature.case.GEN", "PAR": "feature.case.PAR",
+        "INE": "feature.case.INE", "ELA": "feature.case.ELA", "ILL": "feature.case.ILL",
+        "ADE": "feature.case.ADE", "ABL": "feature.case.ABL", "ALL": "feature.case.ALL",
+        "ESS": "feature.case.ESS", "TRA": "feature.case.TRA", "INS": "feature.case.INS",
+        "ABE": "feature.case.ABE", "COM": "feature.case.COM", "ACC": "feature.case.ACC",
     },
 }
 
@@ -168,18 +162,20 @@ def _normalise(raw: dict) -> dict:
     }
 
 
-def _humanise_features(features: dict) -> dict:
+def _humanise_features(features: dict, lang: str = "en") -> dict:
     out = {}
     for key, val in features.items():
-        label = _FEATURE_LABELS.get(key, {}).get(val, val)
-        out[key.lower()] = label
+        i18n_key = _FEATURE_KEY_MAP.get(key, {}).get(val)
+        out[key.lower()] = t(i18n_key, lang) if i18n_key else val
     return out
 
 
 @app.get("/analyse")
-def analyse(word: str):
+def analyse(word: str, lang: str = "en"):
     word = word.strip()[:64]
     lookup = word.lower()
+    if lang not in SUPPORTED_LANGS:
+        lang = "en"
 
     raw_results = voikko.analyze(lookup)
     if not raw_results:
@@ -199,7 +195,7 @@ def analyse(word: str):
 
         root = get_verb_root(word_id) if upos in ("VERB", "AUX") and word_id else None
         segments = (
-            build_segments(lookup, root, upos, features, lemma=word_id)
+            build_segments(lookup, root, upos, features, lemma=word_id, lang=lang)
             if root else None
         )
 
@@ -211,7 +207,7 @@ def analyse(word: str):
         if upos:
             reading["upos"] = upos
         if features:
-            reading["features"] = _humanise_features(features)
+            reading["features"] = _humanise_features(features, lang)
 
         readings.append(reading)
 
