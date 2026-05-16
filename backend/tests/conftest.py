@@ -1,9 +1,8 @@
 """
 Shared fixtures for the API test suite.
 
-We construct a single TestClient at module scope. FastAPI's lifespan handler
-(which loads Omorfi) runs once when the client enters its context manager,
-so all tests reuse one loaded analyser.
+We construct a single TestClient at module scope so all tests share one
+loaded Voikko analyser.
 """
 import sys
 from pathlib import Path

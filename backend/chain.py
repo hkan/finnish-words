@@ -281,9 +281,8 @@ def build_segments(surface: str, root: str, upos: str, features: dict,
     segments_rev: list[dict] = []
     work = surface
 
-    # Peel clitics off the end greedily. Omorfi's CLIT feature only reports the
-    # outermost one, but Finnish allows stacks like -hän-kö, -pa-s, -kin-kö.
-    # We keep popping any known clitic surface until none matches.
+    # Peel clitics off the end greedily. Finnish allows stacks like -hän-kö,
+    # -pa-s, -kin-kö. We keep popping any known clitic surface until none matches.
     while True:
         matched = None
         for clit_key, variants in _CLITICS.items():

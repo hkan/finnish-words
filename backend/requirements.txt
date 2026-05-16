@@ -13,7 +13,6 @@ httpcore==1.0.9
 httpx==0.28.1
 idna==3.13
 macholib @ file:///AppleInternal/Library/BuildRoots/4~CGYkugDNMJDPussZJfa8Q7q7wDj7yZMIh_VI6H4/Library/Caches/com.apple.xbs/Sources/python3/macholib-1.15.2-py2.py3-none-any.whl
-omorfi==0.9.12
 openpyxl==3.1.5
 pydantic==2.13.4
 pydantic_core==2.46.4

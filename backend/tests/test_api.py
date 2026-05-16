@@ -320,8 +320,8 @@ FALLBACK = [
 
 
 def test_olla_present_not_duplicated(client):
-    """olla is tagged as both AUX and VERB by Omorfi; the chain reading
-    should appear once, not twice."""
+    """olla can produce duplicate analyses; the chain reading should appear
+    once, not twice."""
     r = client.get("/analyse", params={"word": "olen"})
     payload = r.json()
     chains = [
