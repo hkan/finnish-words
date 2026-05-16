@@ -45,6 +45,43 @@ _PAST_STEM_OVERRIDES = {
     "lyödä": "lö",   # löin, löi
 }
 
+# Consonant gradation patterns applied at the END of a stem when forming the
+# past tense. Many type-1 verbs (e.g. -ttaa, -taa) close their syllable in
+# past tense forms, triggering weak-grade alternation. We try the strong-grade
+# root first and only fall back to gradated candidates when it fails to align.
+_GRADATION = [
+    ("tt", "t"),    # kirjoitta- → kirjoit-  (kirjoitin)
+    ("kk", "k"),    # leikka-    → leika-    (leikin)
+    ("pp", "p"),    # oppi-      → opi-      (opin)
+    ("nt", "nn"),   # anta-      → ann-      (annoin)
+    ("mp", "mm"),
+    ("lt", "ll"),
+    ("rt", "rr"),
+    ("nk", "ng"),
+]
+
+_VOWELS = "aeiouyäö"
+
+
+def _past_stem_candidates(root: str) -> list[str]:
+    """
+    Yield plausible past-tense stems for a given root.
+
+    Ordered most-conservative first: the root unchanged, then with its
+    final vowel dropped, then with end-cluster gradation applied. The
+    chain builder takes the first candidate whose prefix appears in the
+    surface form, so regular roots ("sano", "men", "tul") always win
+    over their alternatives.
+    """
+    candidates = [root]
+    if len(root) > 1 and root[-1] in _VOWELS:
+        without_v = root[:-1]
+        candidates.append(without_v)
+        for strong, weak in _GRADATION:
+            if without_v.endswith(strong):
+                candidates.append(without_v[: -len(strong)] + weak)
+    return candidates
+
 _CLITIC_LABEL = {
     "KO":   "question particle",
     "PA":   "emphatic particle",
@@ -121,17 +158,22 @@ def build_segments(surface: str, root: str, upos: str, features: dict,
                 "label": _PERSON_LABEL.get(pers, pers),
             })
 
-    # Try the irregular past-stem override first (e.g. syödä → sö), then
-    # fall back to the regular root. The stem we pick is what appears in
-    # the surface; we keep the same "root" label since it's still the
-    # lemma's root, just in its past-tense form.
-    stem_used = root
+    # Pick the stem that actually appears in the surface. Priority:
+    # 1. Irregular past-stem override (e.g. syödä → sö)
+    # 2. The root unchanged (regular verbs)
+    # 3. Gradation candidates (drop final vowel + weak-grade cluster) for
+    #    type-1 verbs like kirjoitta → kirjoit, anta → ann.
+    stem_used = None
     if lemma and lemma in _PAST_STEM_OVERRIDES:
         override = _PAST_STEM_OVERRIDES[lemma]
         if work.startswith(override):
             stem_used = override
-
-    if not work.startswith(stem_used):
+    if stem_used is None:
+        for cand in _past_stem_candidates(root):
+            if work.startswith(cand):
+                stem_used = cand
+                break
+    if stem_used is None:
         return None
     tense_surface = work[len(stem_used):]
     if tense_surface:
