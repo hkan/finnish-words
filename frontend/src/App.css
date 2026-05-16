@@ -133,20 +133,20 @@ header {
   border-radius: 6px;
 }
 
-.chip {
-  display: inline-flex;
-  flex-direction: column;
-  padding: 0.5rem 0.7rem;
+.step {
+  padding: 0.6rem 0.85rem;
   border-radius: 8px;
-  min-width: 2.5rem;
   opacity: 0;
+  margin-left: var(--step-indent, 0);
 }
 
-.example-state .chip {
+.step ~ .step { --step-indent: 1rem; }
+
+.example-state .step {
   opacity: 1;
 }
 
-.chip--animate {
+.step--animate {
   animation: chip-in 0.22s ease forwards;
 }
 
@@ -155,15 +155,25 @@ header {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.chip-surface {
+.step-surface {
   font-family: ui-monospace, monospace;
   font-size: 1.15rem;
   font-weight: 600;
   line-height: 1.2;
 }
 
-.chip-roles {
-  font-size: 0.68rem;
+.step-plus {
+  opacity: 0.55;
+}
+
+.step-arrow {
+  font-weight: 500;
+  opacity: 0.65;
+  margin-left: 0.25rem;
+}
+
+.step-label {
+  font-size: 0.925rem;
   margin-top: 0.25rem;
   line-height: 1.4;
   opacity: 0.8;
@@ -171,17 +181,17 @@ header {
 
 /* category colours */
 
-.chip--stem      { background: #eeebe6; color: #1c1c1c; }
-.chip--tense     { background: #fef3c7; color: #92400e; }
-.chip--person    { background: #dbeafe; color: #1e40af; }
-.chip--voice     { background: #ede9fe; color: #5b21b6; }
-.chip--mood      { background: #fce7f3; color: #9d174d; }
-.chip--clitic    { background: #ccfbf1; color: #134e4a; }
-.chip--nonfinite { background: #e0e7ff; color: #3730a3; }
-.chip--case      { background: #dcfce7; color: #14532d; }
-.chip--number    { background: #ffedd5; color: #9a3412; }
-.chip--unlabeled { background: #f3f4f6; color: #9ca3af; }
-.chip--other     { background: #ffe4e6; color: #9f1239; }
+.step--stem      { background: #eeebe6; color: #1c1c1c; }
+.step--tense     { background: #fef3c7; color: #92400e; }
+.step--person    { background: #dbeafe; color: #1e40af; }
+.step--voice     { background: #ede9fe; color: #5b21b6; }
+.step--mood      { background: #fce7f3; color: #9d174d; }
+.step--clitic    { background: #ccfbf1; color: #134e4a; }
+.step--nonfinite { background: #e0e7ff; color: #3730a3; }
+.step--case      { background: #dcfce7; color: #14532d; }
+.step--number    { background: #ffedd5; color: #9a3412; }
+.step--unlabeled { background: #f3f4f6; color: #9ca3af; }
+.step--other     { background: #ffe4e6; color: #9f1239; }
 
 /* input bar */
 

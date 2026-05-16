@@ -7,7 +7,7 @@ const EXAMPLE = {
     word_id: "tietää",
     root: "tie",
     segments: [
-      { surface: "tie", role: "stem",   label: null },
+      { surface: "tie", role: "stem",   label: "root" },
       { surface: "si",  role: "tense",  label: "past tense marker (-si)" },
       { surface: "t",   role: "person", label: "2nd person singular (you)" },
       { surface: "kö",  role: "clitic", label: "question particle (-kö)" },
@@ -30,16 +30,23 @@ function Reading({ reading, word, animate }) {
       )}
       {segments ? (
         <div className="segments">
-          {segments.map((s, j) => (
-            <div
-              key={j}
-              className={`chip chip--${s.role}${animate ? " chip--animate" : ""}`}
-              style={animate ? { animationDelay: `${j * 70}ms` } : {}}
-            >
-              <span className="chip-surface">{s.surface}</span>
-              {s.label && <span className="chip-roles">{s.label}</span>}
-            </div>
-          ))}
+          {segments.map((s, j) => {
+            const cumulative = segments.slice(0, j + 1).map(x => x.surface).join("")
+            return (
+              <div
+                key={j}
+                className={`step step--${s.role}${animate ? " step--animate" : ""}`}
+                style={animate ? { animationDelay: `${j * 70}ms` } : {}}
+              >
+                <div className="step-surface">
+                  {j > 0 && <span className="step-plus">+ </span>}
+                  <span className="step-morph">{s.surface}</span>
+                  {j > 0 && <span className="step-arrow">  →  {cumulative}</span>}
+                </div>
+                {s.label && <div className="step-label">{s.label}</div>}
+              </div>
+            )
+          })}
         </div>
       ) : (
         reading.features && (

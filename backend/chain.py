@@ -117,6 +117,6 @@ def build_segments(surface: str, root: str, upos: str, features: dict) -> Option
             "label": f"past tense marker (-{tense_surface})",
         })
 
-    segments_rev.append({"surface": root, "role": "stem", "label": None})
+    segments_rev.append({"surface": root, "role": "stem", "label": "root"})
 
     return list(reversed(segments_rev))
