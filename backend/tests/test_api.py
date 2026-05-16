@@ -133,6 +133,43 @@ PRESENT_TENSE = [
     ("syönkö",   "syödä",  "syö + n + kö"),
 ]
 
+# Type-1 present-tense gradation: SG1/SG2/PL1/PL2 use weak grade,
+# SG3/PL3 use strong grade.
+PRESENT_GRADATION = [
+    # rt → rr (ymmärtää)
+    ("ymmärrän",   "ymmärtää",   "ymmärrä + n"),
+    ("ymmärrät",   "ymmärtää",   "ymmärrä + t"),
+    ("ymmärtää",   "ymmärtää",   "ymmärtä + ä"),
+    ("ymmärrämme", "ymmärtää",   "ymmärrä + mme"),
+    ("ymmärrätte", "ymmärtää",   "ymmärrä + tte"),
+    ("ymmärtävät", "ymmärtää",   "ymmärtä + vät"),
+    # t → d (tietää)
+    ("tiedän",     "tietää",     "tiedä + n"),
+    ("tiedät",     "tietää",     "tiedä + t"),
+    ("tietää",     "tietää",     "tietä + ä"),
+    ("tiedämme",   "tietää",     "tiedä + mme"),
+    ("tietävät",   "tietää",     "tietä + vät"),
+    # nt → nn (antaa)
+    ("annan",      "antaa",      "anna + n"),
+    ("annat",      "antaa",      "anna + t"),
+    ("antaa",      "antaa",      "anta + a"),
+    ("annamme",    "antaa",      "anna + mme"),
+    ("antavat",    "antaa",      "anta + vat"),
+    # tt → t (kirjoittaa)
+    ("kirjoitan",   "kirjoittaa", "kirjoita + n"),
+    ("kirjoitat",   "kirjoittaa", "kirjoita + t"),
+    ("kirjoittaa",  "kirjoittaa", "kirjoitta + a"),
+    ("kirjoittavat","kirjoittaa", "kirjoitta + vat"),
+    # pp → p (oppia). "opin" handled separately (ambiguous past/present).
+    ("oppii",      "oppia",      "oppi + i"),
+    # k → ∅ (lukea)
+    ("luen",       "lukea",      "lue + n"),
+    ("lukee",      "lukea",      "luke + e"),
+    # No gradation (sanity): puhua, sanoa still work via fallback to strong
+    ("puhun",      "puhua",      "puhu + n"),
+    ("sanon",      "sanoa",      "sano + n"),
+]
+
 GRADATION = [
     ("kirjoitin",   "kirjoittaa", "kirjoit + i + n"),
     ("kirjoititte", "kirjoittaa", "kirjoit + i + tte"),
@@ -140,7 +177,8 @@ GRADATION = [
     ("aloitin",     "aloittaa",   "aloit + i + n"),
     ("odotin",      "odottaa",    "odot + i + n"),
     ("lopetin",     "lopettaa",   "lopet + i + n"),
-    ("opin",        "oppia",      "op + i + n"),
+    # "opin" is ambiguous (oppia present 1sg AND past 1sg). See
+    # test_opin_has_both_readings for explicit two-chain coverage.
     ("annoin",      "antaa",      "ann + oi + n"),
     ("antoi",       "antaa",      "ant + oi"),
     ("kannoin",     "kantaa",     "kann + oi + n"),
@@ -158,6 +196,7 @@ ALL_CHAIN_CASES = (
     + IRREGULAR_SAFE_6
     + GRADATION
     + PRESENT_TENSE
+    + PRESENT_GRADATION
 )
 
 
@@ -181,12 +220,11 @@ FALLBACK = [
     # Tricky irregulars we haven't tabled yet
     "näin", "tein",
     # Present tense forms we don't support yet:
-    # - tiedän / antaa-class gradation alternation
     # - on / ovat (olla's irregular SG3/PL3)
     # - tehdä / nähdä irregular present stems
-    "tiedän", "annan", "on", "ovat", "teen", "näen",
-    # Out of scope: infinitive, participle, ma-infinitive
-    "syömään", "tekevä", "luettu", "tietää",
+    "on", "ovat", "teen", "näen",
+    # Out of scope: infinitive (non-coinciding), participle, ma-infinitive
+    "syömään", "tekevä", "luettu",
     # Nouns
     "talossa", "talolla", "kirja",
 ]
@@ -203,6 +241,20 @@ def test_olla_present_not_duplicated(client):
         if reading.get("segments")
     ]
     assert chains == ["ol + e + n"], f"expected single chain, got {chains}"
+
+
+def test_opin_has_both_readings(client):
+    """`opin` is genuinely ambiguous: oppia present 1sg (`opi + n`) AND
+    past 1sg (`op + i + n`). Both chains should be produced."""
+    r = client.get("/analyse", params={"word": "opin"})
+    payload = r.json()
+    chains = {
+        " + ".join(s["surface"] for s in reading["segments"])
+        for reading in payload.get("readings", [])
+        if reading.get("segments")
+    }
+    assert "opi + n" in chains, f"missing present chain in {chains}"
+    assert "op + i + n" in chains, f"missing past chain in {chains}"
 
 
 def test_olla_past_not_duplicated(client):

@@ -100,6 +100,44 @@ _PERSON_PRES_ACTIVE = {
 _PRESENT_IRREGULAR = {("olla", "SG3"), ("olla", "PL3")}
 
 
+# Type-1 present-tense gradation: cluster rules (longer match wins) then
+# single-consonant softenings (only between vowels). Used to derive the
+# weak-grade present stem (SG1/SG2/PL1/PL2) from the strong-grade stem.
+_PRESENT_CLUSTER_GRADATION = [
+    ("tt", "t"),
+    ("kk", "k"),
+    ("pp", "p"),
+    ("nt", "nn"),
+    ("mp", "mm"),
+    ("lt", "ll"),
+    ("rt", "rr"),
+    ("nk", "ng"),
+]
+_PRESENT_SINGLE_GRADATION = {"t": "d", "p": "v", "k": ""}
+
+
+def _weak_grade(strong: str) -> Optional[str]:
+    """
+    Given a strong-grade present stem (e.g. 'ymmärtä'), return the weak
+    counterpart (e.g. 'ymmärrä'). Returns None if no rule matches — for
+    no-gradation verbs like puhua/sanoa, the strong stem is also used in
+    weak-grade person forms.
+    """
+    if len(strong) < 2 or strong[-1] not in _VOWELS:
+        return None
+    final_v = strong[-1]
+    body = strong[:-1]
+    for s, w in _PRESENT_CLUSTER_GRADATION:
+        if body.endswith(s):
+            return body[: -len(s)] + w + final_v
+    # Single-consonant rule: requires a vowel before the gradating consonant.
+    if len(body) >= 2 and body[-2] in _VOWELS:
+        c = body[-1]
+        if c in _PRESENT_SINGLE_GRADATION:
+            return body[:-1] + _PRESENT_SINGLE_GRADATION[c] + final_v
+    return None
+
+
 def _past_stem_candidates(root: str) -> list[str]:
     """
     Yield plausible past-tense stems for a given root.
@@ -237,15 +275,19 @@ def _build_past(work, root, features, lemma, segments_rev):
 def _build_present(work, root, features, lemma, segments_rev):
     """
     Present indicative active. After clitics are already peeled, `work` is
-    the bare verb form (e.g. `olen`, `puhumme`, `menee`). We expect:
-        TYPE-1: work == root + person_ending
-                SG3 is root + final-vowel-doubled (puhu + u → puhuu)
-        TYPE-2: work == root + person_ending
-                SG3 is root unchanged (syö + ∅ → syö)
-        TYPE-3: work == root + 'e' + person_ending
-                SG3 is root + 'ee' (men + e + e → menee)
-    Type-1 gradation alternation (tiedän, annan) is intentionally unsupported
-    in v1 — returns None for those.
+    the bare verb form.
+
+    Stem shapes by inflection class:
+        TYPE-1 (-Va, -aa/-ää, ...): present stem is lemma[:-1] (strong grade).
+            Gradation alternation: SG1/SG2/PL1/PL2 use the weak-grade
+            counterpart (ymmärrä), SG3/PL3 use strong (ymmärtä). SG3 marker
+            is final-vowel lengthening.
+        TYPE-2 (-da/-dä): bare root + person ending. SG3 coincides with root.
+        TYPE-3 (-lla/-nna/-rra/-sta): root + 'e' + person ending.
+            SG3 marker is the lengthening of the inserted e (men + e + e).
+
+    Irregular forms in `_PRESENT_IRREGULAR` (olla SG3/PL3) and unsupported
+    cases (tehdä, nähdä) return None.
     """
     if not lemma:
         return None
@@ -257,46 +299,32 @@ def _build_present(work, root, features, lemma, segments_rev):
 
     klass = _inflection_class(lemma)
 
-    # SG3 has no overt person ending in present tense; instead the final
-    # vowel of the stem (or the inserted `e` in type-3) is lengthened.
+    if klass == "TYPE1":
+        return _present_type1(work, lemma, pers, segments_rev)
+    if klass == "TYPE2":
+        return _present_type2(work, root, pers, segments_rev)
+    return _present_type3(work, root, pers, segments_rev)
+
+
+def _present_type1(work, lemma, pers, segments_rev):
+    if len(lemma) < 2:
+        return None
+    strong = lemma[:-1]
+    if not strong or strong[-1] not in _VOWELS:
+        return None
+    weak = _weak_grade(strong)
+
     if pers == "SG3":
-        if klass == "TYPE2":
-            # syö, juo: 3sg coincides with the root. Just the stem.
-            if work != root:
-                return None
-            segments_rev.append({"surface": root, "role": "stem", "label": "root"})
-            return list(reversed(segments_rev))
-        if klass == "TYPE3":
-            # men + e + e → menee. Tense marker e, then the lengthening e
-            # acts as the 3sg person marker.
-            if work != root + "ee":
-                return None
-            segments_rev.append({
-                "surface": "e",
-                "role": "person",
-                "label": _PERSON_LABEL["SG3"],
-            })
-            segments_rev.append({
-                "surface": "e",
-                "role": "tense",
-                "label": "present tense marker (-e)",
-            })
-            segments_rev.append({"surface": root, "role": "stem", "label": "root"})
-            return list(reversed(segments_rev))
-        # TYPE-1: puhu → puhuu. The doubled vowel is the 3sg marker.
-        if not root or root[-1] not in _VOWELS:
-            return None
-        if work != root + root[-1]:
+        # Strong stem + final-vowel lengthening: puhu → puhuu, tietä → tietää.
+        if work != strong + strong[-1]:
             return None
         segments_rev.append({
-            "surface": root[-1],
-            "role": "person",
+            "surface": strong[-1], "role": "person",
             "label": _PERSON_LABEL["SG3"],
         })
-        segments_rev.append({"surface": root, "role": "stem", "label": "root"})
+        segments_rev.append({"surface": strong, "role": "stem", "label": "root"})
         return list(reversed(segments_rev))
 
-    # SG1, SG2, PL1, PL2, PL3 — overt person ending.
     popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
     if popped is None:
         return None
@@ -304,25 +332,77 @@ def _build_present(work, root, features, lemma, segments_rev):
     if not pers_surface:
         return None
     segments_rev.append({
-        "surface": pers_surface,
-        "role": "person",
+        "surface": pers_surface, "role": "person",
         "label": _PERSON_LABEL.get(pers, pers),
     })
 
-    # What's left should be the present stem.
-    if klass == "TYPE3":
-        if work != root + "e":
+    # PL3 stays strong (tietävät, antavat). Other persons prefer weak grade,
+    # falling back to strong for verbs without gradation.
+    if pers == "PL3":
+        candidates = [strong]
+    else:
+        candidates = []
+        if weak:
+            candidates.append(weak)
+        candidates.append(strong)
+
+    for cand in candidates:
+        if cand and work == cand:
+            segments_rev.append({"surface": cand, "role": "stem", "label": "root"})
+            return list(reversed(segments_rev))
+    return None
+
+
+def _present_type2(work, root, pers, segments_rev):
+    if pers == "SG3":
+        if work != root:
+            return None
+        segments_rev.append({"surface": root, "role": "stem", "label": "root"})
+        return list(reversed(segments_rev))
+
+    popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
+    if popped is None:
+        return None
+    pers_surface, work = popped
+    if not pers_surface or work != root:
+        return None
+    segments_rev.append({
+        "surface": pers_surface, "role": "person",
+        "label": _PERSON_LABEL.get(pers, pers),
+    })
+    segments_rev.append({"surface": root, "role": "stem", "label": "root"})
+    return list(reversed(segments_rev))
+
+
+def _present_type3(work, root, pers, segments_rev):
+    if pers == "SG3":
+        # men + e + e → menee. The trailing e acts as the SG3 marker.
+        if work != root + "ee":
             return None
         segments_rev.append({
-            "surface": "e",
-            "role": "tense",
+            "surface": "e", "role": "person",
+            "label": _PERSON_LABEL["SG3"],
+        })
+        segments_rev.append({
+            "surface": "e", "role": "tense",
             "label": "present tense marker (-e)",
         })
         segments_rev.append({"surface": root, "role": "stem", "label": "root"})
         return list(reversed(segments_rev))
 
-    # TYPE-1 and TYPE-2: bare root, no tense marker.
-    if work != root:
+    popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
+    if popped is None:
         return None
+    pers_surface, work = popped
+    if not pers_surface or work != root + "e":
+        return None
+    segments_rev.append({
+        "surface": pers_surface, "role": "person",
+        "label": _PERSON_LABEL.get(pers, pers),
+    })
+    segments_rev.append({
+        "surface": "e", "role": "tense",
+        "label": "present tense marker (-e)",
+    })
     segments_rev.append({"surface": root, "role": "stem", "label": "root"})
     return list(reversed(segments_rev))
