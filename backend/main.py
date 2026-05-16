@@ -201,6 +201,74 @@ LABEL_MAP = {
 UPOS_LABELS = {"VERB", "NOUN", "ADJ", "ADV", "NUM", "PRON", "PROPN", "ADP",
                "CCONJ", "SCONJ", "INTJ", "PUNCT", "SYM", "X"}
 
+
+def parse_analysis(raw: str) -> dict:
+    """
+    Extract morphological features from a raw Omorfi analyser output.
+    
+    Example input:
+        [WORD_ID=opettaa][UPOS=VERB][DRV=JA][NUM=SG][CASE=NOM][WEIGHT=0.000000]
+    
+    Returns dict with:
+        word_id: str
+        upos: str (VERB, NOUN, ADJ, etc.)
+        features: dict of extracted features (NUM, CASE, TENSE, etc.)
+        derivation_type: str or None (if DRV tag present)
+        infinitive_form: str or None (if INF tag present)
+        participle_form: str or None (if PCP tag present)
+        semantic_class: str or None (if SEM tag present)
+        pronoun_type: str or None (if PRONTYPE tag present)
+        number_type: str or None (if NUMTYPE tag present)
+        adposition_type: str or None (if ADPTYPE tag present)
+    """
+    tags = re.findall(r"\[([^\]]+)\]", raw)
+    
+    result = {
+        "word_id": None,
+        "upos": None,
+        "features": {},
+        "derivation_type": None,
+        "infinitive_form": None,
+        "participle_form": None,
+        "semantic_class": None,
+        "pronoun_type": None,
+        "number_type": None,
+        "adposition_type": None,
+    }
+    
+    for tag in tags:
+        if "=" not in tag:
+            continue
+            
+        key, val = tag.split("=", 1)
+        
+        if key == "WORD_ID":
+            result["word_id"] = val
+        elif key == "UPOS":
+            result["upos"] = val
+        elif key == "DRV":
+            result["derivation_type"] = val
+        elif key == "LEX":
+            result["derivation_type"] = f"{val} (lexicalized)"
+        elif key == "INF":
+            result["infinitive_form"] = val
+        elif key == "PCP":
+            result["participle_form"] = val
+        elif key == "SEM":
+            result["semantic_class"] = val
+        elif key == "PRONTYPE":
+            result["pronoun_type"] = val
+        elif key == "NUMTYPE":
+            result["number_type"] = val
+        elif key == "ADPTYPE":
+            result["adposition_type"] = val
+        elif key not in ["WEIGHT"]:
+            # Collect all other features
+            result["features"][key] = val
+    
+    return result
+
+
 def parse_labelsegment(raw: str) -> list[dict]:
     parts = re.split(r"(\{[^}]+\}|\[[^\]]+\])", raw)
     segments = []
