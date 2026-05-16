@@ -63,7 +63,7 @@ def build_segments(surface: str, root: str, upos: str, features: dict) -> Option
 
     Currently supports: past indicative active verb forms, with optional clitic.
     """
-    if upos != "VERB":
+    if upos not in ("VERB", "AUX"):
         return None
     if features.get("MOOD") != "INDV":
         return None

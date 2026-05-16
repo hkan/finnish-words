@@ -334,7 +334,12 @@ def humanize_analysis(parsed: dict) -> dict:
 def analyse(word: str):
     word = word.strip()[:64]
 
-    token = Token(word)
+    # Omorfi is case-sensitive; analyse the lowercased form so that
+    # sentence-initial capitalisation (e.g. "Tiesitkö") doesn't fall through
+    # to UNKNOWN. The original `word` is still echoed back for display.
+    lookup = word.lower()
+
+    token = Token(lookup)
     omorfi.analyse(token)
 
     analyses = [
@@ -358,8 +363,8 @@ def analyse(word: str):
         lemmas = analysis.get_lemmas()
         word_id = lemmas[0] if lemmas else None
 
-        root = get_verb_root(word_id) if upos == "VERB" and word_id else None
-        segments = build_segments(word.lower(), root, upos, raw_features) if root else None
+        root = get_verb_root(word_id) if upos in ("VERB", "AUX") and word_id else None
+        segments = build_segments(lookup, root, upos, raw_features) if root else None
 
         parsed = humanize_analysis(parsed)
 
