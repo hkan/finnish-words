@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libvoikko1 voikko-fi python3-libvoikko \
   && rm -rf /var/lib/apt/lists/*
 
-RUN pip install fastapi uvicorn --break-system-packages
+RUN pip install fastapi uvicorn httpx pytest --break-system-packages
 
 COPY backend/ ./backend/
 
