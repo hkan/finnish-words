@@ -37,25 +37,59 @@ def health():
     return {"ready": ready}
 
 LABEL_MAP = {
+    # Tense
     "PAST": "past tense",
     "PRES": "present tense",
+    "PRESENT": "present tense",
+    
+    # Person (from labelsegmenter)
     "SG1": "1st person singular",
     "SG2": "2nd person singular",
     "SG3": "3rd person singular",
     "PL1": "1st person plural",
     "PL2": "2nd person plural",
     "PL3": "3rd person plural",
-    "KO": "question particle",
-    "PA": "question particle",
+    "SG0": "impersonal (0th person)",
+    
+    # Clitics
+    "KO": "question particle (-ko)",
+    "PA": "mood particle (-pa)",
+    "KA": "mood particle (-ka)",
+    "KIN": "additive particle (-kin)",
+    "KAAN": "negative additive particle (-kaan)",
+    "HAN": "discourse particle (-han)",
+    "S": "clitic -s",
+    
+    # Voice
     "ACTV": "active voice",
+    "ACT": "active voice",
     "PASV": "passive voice",
+    "PASS": "passive voice",
+    
+    # Mood
     "INDV": "indicative mood",
     "COND": "conditional mood",
     "IMPV": "imperative mood",
     "POTN": "potential mood",
-    "INF1": "infinitive",
-    "INF2": "infinitive II",
-    "INF3": "infinitive III",
+    
+    # Infinitive forms
+    "INF1": "infinitive I (a-infinitive)",
+    "INFA": "infinitive I (a-infinitive)",
+    "INF2": "infinitive II (e-infinitive)",
+    "INFE": "infinitive II (e-infinitive)",
+    "INF3": "infinitive III (ma-infinitive)",
+    "INFMA": "infinitive III (ma-infinitive)",
+    "MINEN": "4th infinitive / gerund (-minen)",
+    
+    # Participle forms
+    "PCP1": "present participle (-va)",
+    "PCP2": "past participle (-nut)",
+    "VA": "present participle (-va)",
+    "NUT": "past participle (-nut)",
+    "AGENT": "agent participle (-ma)",
+    "NEG": "negation (-ton)",
+    
+    # Cases
     "NOM": "nominative",
     "GEN": "genitive",
     "ACC": "accusative",
@@ -71,18 +105,97 @@ LABEL_MAP = {
     "INS": "instructive",
     "ABE": "abessive (without)",
     "COM": "comitative (together with)",
+    
+    # Number
     "SG": "singular",
     "PL": "plural",
-    "PCP1": "present participle",
-    "PCP2": "past participle",
-    "NEG": "negation",
+    
+    # Comparison
+    "POS": "positive degree",
+    "CMP": "comparative degree",
+    "SUP": "superlative degree",
+    
+    # Possessives (from analyser)
     "POSSG1": "my (possessive)",
     "POSSG2": "your (possessive)",
     "POSSP3": "his / her / their (possessive)",
     "POSPL1": "our (possessive)",
     "POSPL2": "your plural (possessive)",
-    "KIN": "also / even",
-    "KAAN": "either / not even",
+    
+    # Derivational features (DRV tags)
+    # Agent/actor nominals
+    "JA": "agent noun suffix (-ja)",
+    # Gerunds and deverbal nouns
+    "MINEN": "gerund / 4th infinitive (-minen)",
+    "MA": "infinitive / gerundial form (-ma)",
+    "TU": "passive participle (-tu)",
+    "VA": "active participle / infinitive (-va)",
+    "TAVA": "infinitive / resultative (-tava)",
+    "NUT": "resultative / past participle (-nut)",
+    # Deadjectival and other nominals
+    "US": "noun-forming suffix (-us/-yys)",
+    "UUS": "noun-forming suffix (-uus)",
+    # Adjectival
+    "INEN": "adjective-forming suffix (-inen)",
+    # Adverbial
+    "STI": "adverb-forming suffix (-sti)",
+    # Causative/desiderative
+    "TATTAA": "causative suffix (-tattaa)",
+    "TATUTTAA": "passive causative (-tatuttaa)",
+    "TTAA": "iterative suffix (-ttaa)",
+    # Other derivational
+    "MATON": "privative suffix (-maton)",
+    "MAISILLA": "adverbial suffix (-maisilla)",
+    "MAINEN": "quasi-adjective (-mainen)",
+    "TAR": "agent noun suffix (-tar/-tär)",
+    "TON": "privative adjective (-ton/-tön)",
+    "IN": "adjective suffix (-in)",
+    "U": "noun suffix (-u/-y)",
+    "KO": "interrogative / nominal suffix (-ko)",
+    "ISA": "adjective suffix (-isa)",
+    "ISÄ": "adjective suffix (-isä)",
+    "LLINEN": "adjective suffix (-llinen)",
+    "MÄINEN": "quasi-adjective (-mäinen)",
+    "MPI": "comparative suffix (-mpi)",
+    "ITTAIN": "adverbial / distributive (-ittain)",
+    "NEN": "nominal / attributive suffix (-nen)",
+    
+    # Lexicalized derivations (LEX tags)
+    "LEX_STI": "lexicalized adverb (-sti)",
+    
+    # Pronoun type
+    "PRONTYPE_PRS": "personal pronoun",
+    "PRONTYPE_REL": "relative pronoun",
+    "PRONTYPE_INT": "interrogative pronoun",
+    "PRONTYPE_DEM": "demonstrative pronoun",
+    "PRONTYPE_IND": "indefinite pronoun",
+    "PRONTYPE_REC": "reciprocal pronoun",
+    "PRONTYPE_REFL": "reflexive pronoun",
+    
+    # Number type
+    "NUMTYPE_CARD": "cardinal number",
+    "NUMTYPE_ORD": "ordinal number",
+    "NUMTYPE_FRAC": "fractional number",
+    
+    # Adposition type
+    "ADPTYPE_PREP": "preposition",
+    "ADPTYPE_POST": "postposition",
+    
+    # Semantic features
+    "SEM_TITLE": "occupational or title noun",
+    
+    # Style
+    "STYLE_ARCHAIC": "archaic form",
+    "STYLE_DIALECTAL": "dialectal form",
+    "STYLE_NONSTANDARD": "non-standard form",
+    
+    # Boundary and structure
+    "BOUNDARY_COMPOUND": "compound boundary",
+    "BOUNDARY_CLAUSE": "clause boundary",
+    
+    # Other
+    "SUBCAT_QUANTIFIER": "quantifier",
+    "BLACKLIST_TOOSHORTFORCOMPOUND": "too short for compound formation",
 }
 
 UPOS_LABELS = {"VERB", "NOUN", "ADJ", "ADV", "NUM", "PRON", "PROPN", "ADP",
