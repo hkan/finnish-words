@@ -92,6 +92,47 @@ IRREGULAR_SAFE_6 = [
     ("löin",   "lyödä", "lö + i + n"),
 ]
 
+PRESENT_TENSE = [
+    # TYPE-3 (-lla/-nna/-rra/-sta): root + e + person
+    ("olen",     "olla",   "ol + e + n"),
+    ("olet",     "olla",   "ol + e + t"),
+    ("olemme",   "olla",   "ol + e + mme"),
+    ("olette",   "olla",   "ol + e + tte"),
+    ("menen",    "mennä",  "men + e + n"),
+    ("menet",    "mennä",  "men + e + t"),
+    ("menee",    "mennä",  "men + e + e"),
+    ("menemme",  "mennä",  "men + e + mme"),
+    ("menette",  "mennä",  "men + e + tte"),
+    ("menevät",  "mennä",  "men + e + vät"),
+    ("tulen",    "tulla",  "tul + e + n"),
+    ("tulemme",  "tulla",  "tul + e + mme"),
+    ("tulevat",  "tulla",  "tul + e + vat"),
+    ("puren",    "purra",  "pur + e + n"),
+    ("juoksen",  "juosta", "juoks + e + n"),
+    ("juoksee",  "juosta", "juoks + e + e"),
+    ("nousen",   "nousta", "nous + e + n"),
+    # TYPE-2 (-da/-dä after long vowel): root + person
+    ("syön",     "syödä",  "syö + n"),
+    ("syöt",     "syödä",  "syö + t"),
+    ("syömme",   "syödä",  "syö + mme"),
+    ("syövät",   "syödä",  "syö + vät"),
+    ("juon",     "juoda",  "juo + n"),
+    # TYPE-1 (-Va/-Vä, no gradation): root + person
+    ("puhun",    "puhua",  "puhu + n"),
+    ("puhut",    "puhua",  "puhu + t"),
+    ("puhuu",    "puhua",  "puhu + u"),
+    ("puhumme",  "puhua",  "puhu + mme"),
+    ("puhutte",  "puhua",  "puhu + tte"),
+    ("puhuvat",  "puhua",  "puhu + vat"),
+    ("sanon",    "sanoa",  "sano + n"),
+    ("sanoo",    "sanoa",  "sano + o"),
+    ("sanomme",  "sanoa",  "sano + mme"),
+    # Clitics on present tense
+    ("olenko",   "olla",   "ol + e + n + ko"),
+    ("menetkö",  "mennä",  "men + e + t + kö"),
+    ("syönkö",   "syödä",  "syö + n + kö"),
+]
+
 GRADATION = [
     ("kirjoitin",   "kirjoittaa", "kirjoit + i + n"),
     ("kirjoititte", "kirjoittaa", "kirjoit + i + tte"),
@@ -116,6 +157,7 @@ ALL_CHAIN_CASES = (
     + AUX_OLLA
     + IRREGULAR_SAFE_6
     + GRADATION
+    + PRESENT_TENSE
 )
 
 
@@ -138,11 +180,40 @@ def test_chain(client, word, expected_lemma, expected_chain):
 FALLBACK = [
     # Tricky irregulars we haven't tabled yet
     "näin", "tein",
-    # Out of scope: present, infinitive, participle
-    "tiedän", "menen", "syömään", "tekevä", "luettu", "tietää",
+    # Present tense forms we don't support yet:
+    # - tiedän / antaa-class gradation alternation
+    # - on / ovat (olla's irregular SG3/PL3)
+    # - tehdä / nähdä irregular present stems
+    "tiedän", "annan", "on", "ovat", "teen", "näen",
+    # Out of scope: infinitive, participle, ma-infinitive
+    "syömään", "tekevä", "luettu", "tietää",
     # Nouns
     "talossa", "talolla", "kirja",
 ]
+
+
+def test_olla_present_not_duplicated(client):
+    """olla is tagged as both AUX and VERB by Omorfi; the chain reading
+    should appear once, not twice."""
+    r = client.get("/analyse", params={"word": "olen"})
+    payload = r.json()
+    chains = [
+        " + ".join(s["surface"] for s in reading["segments"])
+        for reading in payload.get("readings", [])
+        if reading.get("segments")
+    ]
+    assert chains == ["ol + e + n"], f"expected single chain, got {chains}"
+
+
+def test_olla_past_not_duplicated(client):
+    r = client.get("/analyse", params={"word": "olin"})
+    payload = r.json()
+    chains = [
+        " + ".join(s["surface"] for s in reading["segments"])
+        for reading in payload.get("readings", [])
+        if reading.get("segments")
+    ]
+    assert chains == ["ol + i + n"], f"expected single chain, got {chains}"
 
 
 @pytest.mark.parametrize("word", FALLBACK)

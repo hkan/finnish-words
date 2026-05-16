@@ -415,6 +415,21 @@ def analyse(word: str):
     # Sort: readings with a built morpheme chain come first. Stable otherwise.
     unique.sort(key=lambda r: 0 if r.get("segments") else 1)
 
+    # Collapse identical chains across POS. Omorfi emits `olla` as both AUX
+    # and VERB; the two readings produce the same `ol + i + n` chain and the
+    # user shouldn't see it twice. Key on (word_id, chain surfaces).
+    seen_chain = set()
+    deduped = []
+    for r in unique:
+        segs = r.get("segments")
+        if segs:
+            key = (r.get("word_id"), tuple(s["surface"] for s in segs))
+            if key in seen_chain:
+                continue
+            seen_chain.add(key)
+        deduped.append(r)
+    unique = deduped
+
     # Drop shadow readings: if a (word_id, upos) already has a chain reading,
     # hide its chainless siblings (usually Omorfi's quirky alt-feature parses
     # like PERS=SG0 mirroring SG3).
