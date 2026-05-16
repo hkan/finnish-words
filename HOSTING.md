@@ -13,13 +13,12 @@ The backend runs on `python:3.12-slim` with Voikko installed via apt:
 ```dockerfile
 FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libvoikko1 voikko-fi python3-libvoikko \
+    libvoikko1 voikko-fi \
   && rm -rf /var/lib/apt/lists/*
-RUN pip install --no-cache-dir fastapi uvicorn
-ENV PYTHONPATH=/usr/lib/python3/dist-packages
+RUN pip install --no-cache-dir fastapi uvicorn libvoikko
 ```
 
-`python3-libvoikko` installs into Debian's system Python dist-packages, so the slim image's interpreter needs `PYTHONPATH` to find it.
+`libvoikko1` and `voikko-fi` provide the native library and Finnish dictionaries; `libvoikko` on PyPI provides the Python bindings.
 
 Docker Compose runs two services:
 - `api` — backend image (Voikko + FastAPI), port 8000
@@ -33,7 +32,7 @@ First-time setup: `docker compose up --build`. After that, `docker compose up`.
 
 ## Deployment Target
 
-**Koyeb** — persistent container host with native scale-to-zero. Serverless is ruled out: the Voikko analyser needs to stay warm between requests, not reload per invocation.
+**Koyeb** — persistent container host with native scale-to-zero. Serverless is viable: Voikko initialises in ~20ms, so cold starts are not a concern.
 
 - Free tier: 512MB RAM, no credit card required, never expires.
 - Budget ceiling: €20/mo.

@@ -11,12 +11,10 @@ RUN npm run build
 FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libvoikko1 voikko-fi python3-libvoikko \
+    libvoikko1 voikko-fi \
   && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir fastapi uvicorn
-
-ENV PYTHONPATH=/usr/lib/python3/dist-packages
+RUN pip install --no-cache-dir fastapi uvicorn libvoikko
 
 COPY backend/ /app/backend/
 COPY --from=frontend-builder /build/dist /app/backend/static
