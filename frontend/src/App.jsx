@@ -61,6 +61,27 @@ export default function App() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
 
+  // Initialize from URL query params on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const queryWord = params.get("word")
+    if (queryWord) {
+      setWord(queryWord)
+    }
+  }, [])
+
+  // Sync word to URL query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (word.trim()) {
+      params.set("word", word.trim())
+    } else {
+      params.delete("word")
+    }
+    const newUrl = `${window.location.pathname}${params.toString() ? "?" + params.toString() : ""}`
+    window.history.replaceState({}, "", newUrl)
+  }, [word])
+
   async function fetchAnalysis(w) {
     setLoading(true)
     setResult(null)
