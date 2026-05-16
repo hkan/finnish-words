@@ -89,16 +89,31 @@ header {
   color: #aaa;
 }
 
-/* morpheme chips */
+/* segment chips */
 
-.morphemes {
+.segments {
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.chip {
+.features-fallback {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.feature-tag {
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.chip {
+  display: inline-flex;
   flex-direction: column;
   padding: 0.5rem 0.7rem;
   border-radius: 8px;
@@ -156,6 +171,14 @@ header {
   border-top: 1px solid #e5e4e7;
   padding: 0.75rem 1.25rem;
   padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+}
+
+.input-hint {
+  display: block;
+  font-size: 0.875rem;
+  color: #555;
+  margin-bottom: 0.4rem;
+  text-align: center;
 }
 
 input {

@@ -5,53 +5,46 @@ const EXAMPLE = {
   word: "tiesitkö",
   readings: [{
     word_id: "tietää",
-    morphemes: [
-      { surface: "ties", roles: ["stem"] },
-      { surface: "i",    roles: [] },
-      { surface: "t",    roles: ["active voice", "past tense", "2nd person singular"] },
-      { surface: "kö",   roles: ["question particle"] },
-    ]
-  }]
-}
-
-function getCategory(morpheme) {
-  if (morpheme.roles.includes("stem")) return "stem"
-  const role = morpheme.roles[0] || ""
-  if (!role) return "unlabeled"
-  if (role.includes("tense")) return "tense"
-  if (role.includes("person")) return "person"
-  if (role.includes("voice")) return "voice"
-  if (role.includes("mood")) return "mood"
-  if (role.includes("particle") || role.includes("negation")) return "clitic"
-  if (role.includes("infinitive") || role.includes("participle")) return "nonfinite"
-  const caseForms = ["nominative","genitive","accusative","partitive","inessive","elative",
-    "illative","adessive","ablative","allative","essive","translative","instructive","abessive","comitative"]
-  if (caseForms.some(c => role.includes(c))) return "case"
-  if (role.includes("singular") || role.includes("plural")) return "number"
-  return "other"
+    root: "tie",
+    segments: [
+      { surface: "tie", role: "stem",   label: null },
+      { surface: "si",  role: "tense",  label: "past tense marker (-si)" },
+      { surface: "t",   role: "person", label: "2nd person singular (you)" },
+      { surface: "kö",  role: "clitic", label: "question particle (-kö)" },
+    ],
+  }],
 }
 
 function Reading({ reading, word, animate }) {
+  const segments = reading.segments
   return (
     <div className="reading">
       <div className="word-header">
         <span className="word-surface">{word}</span>
         {reading.word_id && <span className="word-id">{reading.word_id}</span>}
       </div>
-      <div className="morphemes">
-        {reading.morphemes.map((m, j) => (
-          <div
-            key={j}
-            className={`chip chip--${getCategory(m)}${animate ? " chip--animate" : ""}`}
-            style={animate ? { animationDelay: `${j * 70}ms` } : {}}
-          >
-            <span className="chip-surface">{m.surface}</span>
-            {m.roles.length > 0 && (
-              <span className="chip-roles">{m.roles.join(" · ")}</span>
-            )}
+      {segments ? (
+        <div className="segments">
+          {segments.map((s, j) => (
+            <div
+              key={j}
+              className={`chip chip--${s.role}${animate ? " chip--animate" : ""}`}
+              style={animate ? { animationDelay: `${j * 70}ms` } : {}}
+            >
+              <span className="chip-surface">{s.surface}</span>
+              {s.label && <span className="chip-roles">{s.label}</span>}
+            </div>
+          ))}
+        </div>
+      ) : (
+        reading.features && (
+          <div className="features-fallback">
+            {Object.entries(reading.features).map(([k, v]) => (
+              <span key={k} className="feature-tag">{v}</span>
+            ))}
           </div>
-        ))}
-      </div>
+        )
+      )}
     </div>
   )
 }
@@ -127,6 +120,7 @@ export default function App() {
       </div>
 
       <div className="input-bar">
+        <p className="input-hint">one Finnish word, lowercase, no punctuation</p>
         <input
           value={word}
           onChange={(e) => setWord(e.target.value)}
