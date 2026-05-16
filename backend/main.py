@@ -343,11 +343,46 @@ def analyse(word: str):
 
     readings = []
     for analysis in analyses:
+        # Parse the analysis to extract all features
+        parsed = parse_analysis(analysis.raw)
+        
         lemmas = analysis.get_lemmas()
-        readings.append({
+        reading = {
             "word_id": lemmas[0] if lemmas else None,
-            "morphemes": morphemes,
-        })
+        }
+        
+        # Add extracted features from analyser
+        if parsed["upos"]:
+            reading["upos"] = parsed["upos"]
+        if parsed["derivation_type"]:
+            reading["derivation_type"] = parsed["derivation_type"]
+        if parsed["infinitive_form"]:
+            reading["infinitive_form"] = parsed["infinitive_form"]
+        if parsed["participle_form"]:
+            reading["participle_form"] = parsed["participle_form"]
+        if parsed["semantic_class"]:
+            reading["semantic_class"] = parsed["semantic_class"]
+        if parsed["pronoun_type"]:
+            reading["pronoun_type"] = parsed["pronoun_type"]
+        if parsed["number_type"]:
+            reading["number_type"] = parsed["number_type"]
+        if parsed["adposition_type"]:
+            reading["adposition_type"] = parsed["adposition_type"]
+        
+        # Add features dict only if non-empty
+        if parsed["features"]:
+            reading["features"] = parsed["features"]
+        
+        # Add morphemes (currently shared across all readings - see TODO)
+        reading["morphemes"] = morphemes
+        
+        readings.append(reading)
+        
+        logging.debug("  analysis: %s → word_id=%s upos=%s deriv=%s", 
+                      analysis.raw[:80], 
+                      parsed["word_id"], 
+                      parsed["upos"],
+                      parsed["derivation_type"])
 
     return {"word": word, "unknown": False, "readings": readings}
 
