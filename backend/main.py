@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from omorfi import Omorfi, Token
+from stem import get_verb_root
+from chain import build_segments
 
 omorfi = Omorfi()
 ready = False
@@ -18,8 +20,6 @@ async def lifespan(app: FastAPI):
     logging.debug("Loading omorfi files")
     omorfi.load_analyser("/app/src/generated/omorfi.describe.hfst")
     logging.debug("Loaded omorfi.describe.hfst")
-    omorfi.load_labelsegmenter("/app/src/generated/omorfi.labelsegment.hfst")
-    logging.debug("Loaded omorfi.labelsegment.hfst")
     ready = True
     yield
 
@@ -42,7 +42,7 @@ LABEL_MAP = {
     "PRES": "present tense",
     "PRESENT": "present tense",
     
-    # Person (from labelsegmenter)
+    # Person
     "SG1": "1st person singular",
     "SG2": "2nd person singular",
     "SG3": "3rd person singular",
@@ -198,10 +198,6 @@ LABEL_MAP = {
     "BLACKLIST_TOOSHORTFORCOMPOUND": "too short for compound formation",
 }
 
-UPOS_LABELS = {"VERB", "NOUN", "ADJ", "ADV", "NUM", "PRON", "PROPN", "ADP",
-               "CCONJ", "SCONJ", "INTJ", "PUNCT", "SYM", "X"}
-
-
 def parse_analysis(raw: str) -> dict:
     """
     Extract morphological features from a raw Omorfi analyser output.
@@ -334,52 +330,6 @@ def humanize_analysis(parsed: dict) -> dict:
     return result
 
 
-def parse_labelsegment(raw: str) -> list[dict]:
-    parts = re.split(r"(\{[^}]+\}|\[[^\]]+\])", raw)
-    segments = []
-    current_surface = ""
-    current_labels = []
-    is_stub = False
-
-    for part in parts:
-        if part.startswith("{"):
-            tag = part[1:-1]
-            if tag == "STUB":
-                segments.append({"surface": current_surface, "labels": current_labels, "stub": True})
-                current_surface = ""
-                current_labels = []
-            elif tag == "MB":
-                segments.append({"surface": current_surface, "labels": current_labels, "stub": is_stub})
-                current_surface = ""
-                current_labels = []
-                is_stub = False
-        elif part.startswith("["):
-            label = part[1:-1]
-            if label not in UPOS_LABELS:
-                current_labels.append(label)
-        else:
-            current_surface += part
-
-    if current_surface or current_labels:
-        segments.append({"surface": current_surface, "labels": current_labels, "stub": is_stub})
-
-    result = [
-        {
-            "surface": seg["surface"],
-            "roles": ["stem"] if seg["stub"] else [LABEL_MAP.get(l, l) for l in seg["labels"]],
-        }
-        for seg in segments
-        if seg["surface"]
-    ]
-
-    for seg in result:
-        raw_labels = [r for r in seg["roles"] if r not in LABEL_MAP.values() and r != "stem"]
-        if raw_labels:
-            logging.warning("unmapped label(s) in output: %s (surface=%r)", raw_labels, seg["surface"])
-
-    return result
-
-
 @app.get("/analyse")
 def analyse(word: str):
     word = word.strip()[:64]
@@ -392,35 +342,30 @@ def analyse(word: str):
         logging.debug("analyse %r → unknown", word)
         return {"word": word, "unknown": True}
 
-    seg_token = Token(word)
-    omorfi.labelsegment(seg_token)
-
-    logging.debug("analyse %r → %d analysis(es), %d segmentation(s)",
-                  word, len(analyses), len(seg_token.labelsegmentations))
+    logging.debug("analyse %r → %d analysis(es)", word, len(analyses))
     for a in token.analyses:
         logging.debug("  analyser raw: %s", a.raw)
-    for s in seg_token.labelsegmentations:
-        logging.debug("  segmenter raw: %s", s.raw)
-
-    morphemes = []
-    if seg_token.labelsegmentations:
-        morphemes = parse_labelsegment(seg_token.labelsegmentations[0].raw)
 
     readings = []
     for analysis in analyses:
-        # Parse the analysis to extract all features
         parsed = parse_analysis(analysis.raw)
-        # Convert codes to human-readable labels
-        parsed = humanize_analysis(parsed)
-        
+        raw_features = dict(parsed["features"])
+        upos = parsed["upos"]
         lemmas = analysis.get_lemmas()
-        reading = {
-            "word_id": lemmas[0] if lemmas else None,
-        }
-        
-        # Add extracted features from analyser
-        if parsed["upos"]:
-            reading["upos"] = parsed["upos"]
+        word_id = lemmas[0] if lemmas else None
+
+        root = get_verb_root(word_id) if upos == "VERB" and word_id else None
+        segments = build_segments(word.lower(), root, upos, raw_features) if root else None
+
+        parsed = humanize_analysis(parsed)
+
+        reading = {"word_id": word_id}
+        if root:
+            reading["root"] = root
+        if segments:
+            reading["segments"] = segments
+        if upos:
+            reading["upos"] = upos
         if parsed["derivation_type"]:
             reading["derivation_type"] = parsed["derivation_type"]
         if parsed["infinitive_form"]:
@@ -435,21 +380,13 @@ def analyse(word: str):
             reading["number_type"] = parsed["number_type"]
         if parsed["adposition_type"]:
             reading["adposition_type"] = parsed["adposition_type"]
-        
-        # Add features dict only if non-empty
         if parsed["features"]:
             reading["features"] = parsed["features"]
-        
-        # Add morphemes (currently shared across all readings - see TODO)
-        reading["morphemes"] = morphemes
-        
+
         readings.append(reading)
-        
-        logging.debug("  analysis: %s → word_id=%s upos=%s deriv=%s", 
-                      analysis.raw[:80], 
-                      parsed["word_id"], 
-                      parsed["upos"],
-                      parsed["derivation_type"])
+
+        logging.debug("  word_id=%s upos=%s root=%s segments=%s",
+                      word_id, upos, root, bool(segments))
 
     return {"word": word, "unknown": False, "readings": readings}
 
