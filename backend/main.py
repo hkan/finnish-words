@@ -337,7 +337,11 @@ def analyse(word: str):
     token = Token(word)
     omorfi.analyse(token)
 
-    analyses = [a for a in token.analyses if "[GUESS=UNKNOWN]" not in a.raw]
+    analyses = [
+        a for a in token.analyses
+        if "[GUESS=UNKNOWN]" not in a.raw
+        and "[BLACKLIST=TOOSHORTFORCOMPOUND]" not in a.raw
+    ]
     if not analyses:
         logging.debug("analyse %r → unknown", word)
         return {"word": word, "unknown": True}
@@ -388,7 +392,25 @@ def analyse(word: str):
         logging.debug("  word_id=%s upos=%s root=%s segments=%s",
                       word_id, upos, root, bool(segments))
 
-    return {"word": word, "unknown": False, "readings": readings}
+    # Deduplicate readings: Omorfi can yield the same (lemma, pos, features)
+    # via different internal paths. Collapse to unique on a stable signature.
+    seen = set()
+    unique = []
+    for r in readings:
+        sig = (
+            r.get("word_id"),
+            r.get("upos"),
+            tuple(sorted((r.get("features") or {}).items())),
+        )
+        if sig in seen:
+            continue
+        seen.add(sig)
+        unique.append(r)
+
+    # Sort: readings with a built morpheme chain come first. Stable otherwise.
+    unique.sort(key=lambda r: 0 if r.get("segments") else 1)
+
+    return {"word": word, "unknown": False, "readings": unique}
 
 
 static_dir = Path(__file__).parent / "static"
