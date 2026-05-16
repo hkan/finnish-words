@@ -9,6 +9,7 @@ const UI = {
     unknownWord: "Unknown word.",
     inputHint: "one Finnish word, lowercase, no punctuation",
     placeholder: "Type a Finnish word…",
+    credits: "Finnish terminology from",
     exampleSegments: [
       { surface: "tie", role: "stem",   label: "root" },
       { surface: "si",  role: "tense",  label: "past tense marker (-si)" },
@@ -23,6 +24,7 @@ const UI = {
     unknownWord: "Tuntematon sana.",
     inputHint: "yksi suomen sana, pienillä kirjaimilla, ilman välimerkkejä",
     placeholder: "Kirjoita suomen sana…",
+    credits: "Suomen kielioppitieto lähteestä",
     exampleSegments: [
       { surface: "tie", role: "stem",   label: "vartalo" },
       { surface: "si",  role: "tense",  label: "imperfektin tunnus (-si)" },
@@ -37,6 +39,7 @@ const UI = {
     unknownWord: "Bilinmeyen kelime.",
     inputHint: "bir Fince kelime, küçük harfle, noktalama işareti olmadan",
     placeholder: "Bir Fince kelime yazın…",
+    credits: "Fince dilbilgisi terminolojisi kaynağı:",
     exampleSegments: [
       { surface: "tie", role: "stem",   label: "kök" },
       { surface: "si",  role: "tense",  label: "geçmiş zaman eki (-si)" },
@@ -252,6 +255,12 @@ export default function App() {
       </div>
 
       <div className="input-bar">
+        <p className="credits">
+          {ui.credits}{" "}
+          <a href="https://uusikielemme.fi" target="_blank" rel="noopener noreferrer">
+            uusikielemme.fi
+          </a>
+        </p>
         <p className="input-hint">{ui.inputHint}</p>
         <input
           value={word}
