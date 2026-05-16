@@ -89,6 +89,27 @@ header {
   color: #aaa;
 }
 
+.lemma-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.lemma-form {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1c1c1c;
+  letter-spacing: -0.01em;
+}
+
+.lemma-label {
+  font-size: 0.7rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 /* segment chips */
 
 .segments {

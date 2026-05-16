@@ -21,8 +21,13 @@ function Reading({ reading, word, animate }) {
     <div className="reading">
       <div className="word-header">
         <span className="word-surface">{word}</span>
-        {reading.word_id && <span className="word-id">{reading.word_id}</span>}
       </div>
+      {reading.word_id && (
+        <div className="lemma-row">
+          <span className="lemma-form">{reading.word_id}</span>
+          <span className="lemma-label">dictionary form</span>
+        </div>
+      )}
       {segments ? (
         <div className="segments">
           {segments.map((s, j) => (
