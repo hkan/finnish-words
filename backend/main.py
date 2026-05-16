@@ -269,6 +269,71 @@ def parse_analysis(raw: str) -> dict:
     return result
 
 
+def humanize_analysis(parsed: dict) -> dict:
+    """
+    Convert raw analysis codes to human-readable labels using LABEL_MAP.
+    
+    Transforms:
+    - derivation_type: "JA" → "agent noun suffix (-ja)"
+    - infinitive_form: "MINEN" → "gerund / 4th infinitive (-minen)"
+    - participle_form: "VA" → "active participle / infinitive (-va)"
+    - semantic_class: "TITLE" → "occupational or title noun"
+    - features: {"TENSE": "PAST"} → {"tense": "past tense"}
+    
+    This makes the API response human-readable without changing the structure.
+    """
+    result = parsed.copy()
+    
+    # Map single-value features
+    if result["derivation_type"]:
+        # Handle both raw codes and lexicalized format
+        code = result["derivation_type"].split(" ")[0] if " " in result["derivation_type"] else result["derivation_type"]
+        if code in LABEL_MAP:
+            result["derivation_type"] = LABEL_MAP[code]
+    
+    if result["infinitive_form"] and result["infinitive_form"] in LABEL_MAP:
+        result["infinitive_form"] = LABEL_MAP[result["infinitive_form"]]
+    
+    if result["participle_form"] and result["participle_form"] in LABEL_MAP:
+        result["participle_form"] = LABEL_MAP[result["participle_form"]]
+    
+    if result["semantic_class"]:
+        lookup_key = f"SEM_{result['semantic_class']}"
+        if lookup_key in LABEL_MAP:
+            result["semantic_class"] = LABEL_MAP[lookup_key]
+        elif result["semantic_class"] in LABEL_MAP:
+            result["semantic_class"] = LABEL_MAP[result["semantic_class"]]
+    
+    if result["pronoun_type"]:
+        lookup_key = f"PRONTYPE_{result['pronoun_type']}"
+        if lookup_key in LABEL_MAP:
+            result["pronoun_type"] = LABEL_MAP[lookup_key]
+    
+    if result["number_type"]:
+        lookup_key = f"NUMTYPE_{result['number_type']}"
+        if lookup_key in LABEL_MAP:
+            result["number_type"] = LABEL_MAP[lookup_key]
+    
+    if result["adposition_type"]:
+        lookup_key = f"ADPTYPE_{result['adposition_type']}"
+        if lookup_key in LABEL_MAP:
+            result["adposition_type"] = LABEL_MAP[lookup_key]
+    
+    # Map feature codes to labels
+    if result["features"]:
+        humanized_features = {}
+        for key, val in result["features"].items():
+            # Try both key=val and just val
+            label_key = f"{key}_{val}" if f"{key}_{val}" in LABEL_MAP else val
+            label_val = LABEL_MAP.get(label_key, f"{key}={val}")
+            # Use lowercase key with underscores
+            feature_name = key.lower()
+            humanized_features[feature_name] = label_val
+        result["features"] = humanized_features
+    
+    return result
+
+
 def parse_labelsegment(raw: str) -> list[dict]:
     parts = re.split(r"(\{[^}]+\}|\[[^\]]+\])", raw)
     segments = []
@@ -345,6 +410,8 @@ def analyse(word: str):
     for analysis in analyses:
         # Parse the analysis to extract all features
         parsed = parse_analysis(analysis.raw)
+        # Convert codes to human-readable labels
+        parsed = humanize_analysis(parsed)
         
         lemmas = analysis.get_lemmas()
         reading = {
