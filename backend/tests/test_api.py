@@ -90,6 +90,18 @@ IRREGULAR_SAFE_6 = [
     ("vein",   "viedä", "ve + i + n"),
     ("myin",   "myydä", "my + i + n"),
     ("löin",   "lyödä", "lö + i + n"),
+    ("kävin",  "käydä", "käv + i + n"),
+    ("kävi",   "käydä", "käv + i"),
+    ("kävimme","käydä", "käv + i + mme"),
+]
+
+# Fully irregular present-tense forms emitted as a single opaque chunk.
+PRESENT_IRREGULAR_FORMS = [
+    ("on",       "olla", "on"),
+    ("ovat",     "olla", "ovat"),
+    ("onko",     "olla", "on + ko"),
+    ("onkohan",  "olla", "on + ko + han"),
+    ("ovatko",   "olla", "ovat + ko"),
 ]
 
 PRESENT_TENSE = [
@@ -197,6 +209,7 @@ ALL_CHAIN_CASES = (
     + GRADATION
     + PRESENT_TENSE
     + PRESENT_GRADATION
+    + PRESENT_IRREGULAR_FORMS
 )
 
 
@@ -220,9 +233,8 @@ FALLBACK = [
     # Tricky irregulars we haven't tabled yet
     "näin", "tein",
     # Present tense forms we don't support yet:
-    # - on / ovat (olla's irregular SG3/PL3)
     # - tehdä / nähdä irregular present stems
-    "on", "ovat", "teen", "näen",
+    "teen", "näen",
     # Out of scope: infinitive (non-coinciding), participle, ma-infinitive
     "syömään", "tekevä", "luettu",
     # Nouns

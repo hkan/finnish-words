@@ -43,6 +43,7 @@ _PAST_STEM_OVERRIDES = {
     "viedä": "ve",   # vein, veivät
     "myydä": "my",   # myin, myi
     "lyödä": "lö",   # löin, löi
+    "käydä": "käv",  # kävin, kävi (irregular v-stem)
 }
 
 # Consonant gradation patterns applied at the END of a stem when forming the
@@ -94,10 +95,12 @@ _PERSON_PRES_ACTIVE = {
 
 
 # Lemmas whose present-tense forms are fully irregular for some person.
-# (lemma, pers) tuples in this set are skipped — we emit no chain rather
-# than a wrong one. `olla`'s `on` (SG3) and `ovat` (PL3) are the canonical
-# examples; both diverge from the regular ol+e+... pattern.
-_PRESENT_IRREGULAR = {("olla", "SG3"), ("olla", "PL3")}
+# These are not segmentable; we emit them as a single opaque stem chunk
+# labelled as an irregular form. The map is (lemma, pers) → surface.
+_PRESENT_FULL_FORMS = {
+    ("olla", "SG3"): "on",
+    ("olla", "PL3"): "ovat",
+}
 
 
 # Type-1 present-tense gradation: cluster rules (longer match wins) then
@@ -294,8 +297,15 @@ def _build_present(work, root, features, lemma, segments_rev):
     pers = features.get("PERS")
     if not pers:
         return None
-    if (lemma, pers) in _PRESENT_IRREGULAR:
-        return None
+    full = _PRESENT_FULL_FORMS.get((lemma, pers))
+    if full is not None:
+        if work != full:
+            return None
+        segments_rev.append({
+            "surface": full, "role": "stem",
+            "label": f"irregular present-tense form of {lemma}",
+        })
+        return list(reversed(segments_rev))
 
     klass = _inflection_class(lemma)
 
