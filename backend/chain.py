@@ -94,13 +94,70 @@ _VOWELS = "aeiouyäö"
 # supported — those forms fall back to no-chain.
 _TYPE3_ENDINGS = ("lla", "llä", "nna", "nnä", "rra", "rrä", "sta", "stä")
 
+# Type-4 (-Vta/-Vtä): pelata, haluta, hypätä, siivota, tavata, kerätä, levätä.
+# Lemma is weak grade, present and past stems are strong grade. Past uses
+# the `si` tense marker; present marker is the harmony vowel a/ä (lengthens
+# the stem's final vowel; doubles as SG3 person marker).
+_TYPE4_ENDINGS = (
+    "ata", "ota", "uta", "ita", "eta",
+    "ätä", "ötä", "ytä", "itä", "etä",
+)
+
 
 def _inflection_class(lemma: str) -> str:
     if lemma.endswith(_TYPE3_ENDINGS):
         return "TYPE3"
+    if lemma.endswith(_TYPE4_ENDINGS):
+        return "TYPE4"
     if lemma.endswith(("da", "dä")):
         return "TYPE2"
     return "TYPE1"
+
+
+def _type4_strong(weak: str) -> str:
+    """Reverse-gradate a type-4 weak stem to derive its strong-grade form.
+    Type-4 infinitives are weak; both present and past stems use strong.
+    Handles single-consonant doubling (p/t/k → pp/tt/kk) and softening
+    reversals (v→p, d→t) between vowels. Returns the weak stem unchanged
+    when no rule applies (no-gradation verbs like pelata, kerätä)."""
+    if len(weak) < 3:
+        return weak
+    last_v = weak[-1]
+    body = weak[:-1]
+    last = body[-1]
+    prev = body[-2] if len(body) >= 2 else ""
+    if last in "ptk" and prev in _VOWELS:
+        return body + last + last_v
+    if last == "v" and prev in _VOWELS:
+        return body[:-1] + "p" + last_v
+    if last == "d" and prev in _VOWELS:
+        return body[:-1] + "t" + last_v
+    return weak
+
+
+def _type4_stems(lemma: str) -> Optional[tuple[list[str], str]]:
+    """Return (stem_candidates, harmony_vowel) for a type-4 verb.
+
+    Candidates are tried in order — weak (no-gradation) first since most
+    type-4 verbs don't gradate (pelata, siivota, kerätä, haluta). Strong
+    is appended when the reverse-gradation rule produces a different
+    string, covering hypätä (p→pp), tavata (v→p), etc. The over-eager
+    rule occasionally produces a wrong strong candidate (siipo from
+    siivo) but it just sits unused — the weak candidate matches first.
+
+    Harmony is `ä` if the stem contains any front vowel, else `a`.
+    """
+    if len(lemma) < 3:
+        return None
+    weak = lemma[:-2]
+    if not weak:
+        return None
+    harmony = "ä" if any(c in "äöy" for c in weak) else "a"
+    strong = _type4_strong(weak)
+    candidates = [weak]
+    if strong != weak:
+        candidates.append(strong)
+    return candidates, harmony
 
 
 _PERSON_PRES_ACTIVE = {
@@ -278,6 +335,17 @@ def _build_past(work, root, features, lemma, segments_rev):
         override = _PAST_STEM_OVERRIDES[lemma]
         if work.startswith(override):
             stem_used = override
+    # Type-4 past stem (strong, derived from lemma) takes priority over the
+    # voikko-root-based candidates since voikko returns the consonant stem
+    # (`pelat`, `hypät`) for these verbs.
+    if stem_used is None and lemma and _inflection_class(lemma) == "TYPE4":
+        result = _type4_stems(lemma)
+        if result:
+            candidates, _ = result
+            for cand in candidates:
+                if work.startswith(cand):
+                    stem_used = cand
+                    break
     if stem_used is None:
         for cand in _past_stem_candidates(root):
             if work.startswith(cand):
@@ -339,6 +407,8 @@ def _build_present(work, root, features, lemma, segments_rev):
         return _present_type1(work, lemma, pers, segments_rev)
     if klass == "TYPE2":
         return _present_type2(work, root, pers, segments_rev)
+    if klass == "TYPE4":
+        return _present_type4(work, lemma, pers, segments_rev)
     return _present_type3(work, root, pers, segments_rev)
 
 
@@ -449,6 +519,49 @@ def _present_alt(work, lemma, pers, segments_rev):
     })
     segments_rev.append({"surface": stem, "role": "stem", "label": "root"})
     return list(reversed(segments_rev))
+
+
+def _present_type4(work, lemma, pers, segments_rev):
+    """
+    Type-4 present: strong stem + harmony vowel (lengthening) + person.
+    pelata → pela + a + n → pelaan. SG3: pela + a → pelaa (the harmony
+    vowel doubles as the person marker, same shape as TYPE-1 SG3).
+    """
+    result = _type4_stems(lemma)
+    if result is None:
+        return None
+    candidates, harmony = result
+
+    if pers == "SG3":
+        for stem in candidates:
+            if work == stem + harmony:
+                segments_rev.append({
+                    "surface": harmony, "role": "person",
+                    "label": _PERSON_LABEL["SG3"],
+                })
+                segments_rev.append({"surface": stem, "role": "stem", "label": "root"})
+                return list(reversed(segments_rev))
+        return None
+
+    popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
+    if popped is None:
+        return None
+    pers_surface, work = popped
+    if not pers_surface:
+        return None
+    for stem in candidates:
+        if work == stem + harmony:
+            segments_rev.append({
+                "surface": pers_surface, "role": "person",
+                "label": _PERSON_LABEL.get(pers, pers),
+            })
+            segments_rev.append({
+                "surface": harmony, "role": "tense",
+                "label": f"present tense marker (-{harmony})",
+            })
+            segments_rev.append({"surface": stem, "role": "stem", "label": "root"})
+            return list(reversed(segments_rev))
+    return None
 
 
 def _present_type3(work, root, pers, segments_rev):

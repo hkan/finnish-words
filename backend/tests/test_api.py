@@ -131,6 +131,50 @@ ALT_STEM_VERBS = [
     ("näinkö",    "nähdä", "nä + i + n + kö"),
 ]
 
+# Type-4 (-Vta/-Vtä): pelata, haluta, hypätä, tavata, siivota, kerätä.
+TYPE4_VERBS = [
+    # pelata — no gradation
+    ("pelaan",     "pelata", "pela + a + n"),
+    ("pelaat",     "pelata", "pela + a + t"),
+    ("pelaa",      "pelata", "pela + a"),
+    ("pelaamme",   "pelata", "pela + a + mme"),
+    ("pelaatte",   "pelata", "pela + a + tte"),
+    ("pelaavat",   "pelata", "pela + a + vat"),
+    ("pelasin",    "pelata", "pela + si + n"),
+    ("pelasit",    "pelata", "pela + si + t"),
+    ("pelasi",     "pelata", "pela + si"),
+    ("pelasimme",  "pelata", "pela + si + mme"),
+    ("pelasivat",  "pelata", "pela + si + vat"),
+    # hypätä — p → pp gradation
+    ("hyppään",    "hypätä", "hyppä + ä + n"),
+    ("hyppäät",    "hypätä", "hyppä + ä + t"),
+    ("hyppää",     "hypätä", "hyppä + ä"),
+    ("hyppäämme",  "hypätä", "hyppä + ä + mme"),
+    ("hyppäävät",  "hypätä", "hyppä + ä + vät"),
+    ("hyppäsin",   "hypätä", "hyppä + si + n"),
+    ("hyppäsi",    "hypätä", "hyppä + si"),
+    # tavata — v → p gradation
+    ("tapaan",     "tavata", "tapa + a + n"),
+    ("tapaat",     "tavata", "tapa + a + t"),
+    ("tapaa",      "tavata", "tapa + a"),
+    ("tapasin",    "tavata", "tapa + si + n"),
+    ("tapasi",     "tavata", "tapa + si"),
+    # haluta — -uta ending, no gradation
+    ("haluan",     "haluta", "halu + a + n"),
+    ("haluat",     "haluta", "halu + a + t"),
+    ("halusin",    "haluta", "halu + si + n"),
+    # siivota — -ota ending, no gradation
+    ("siivoan",    "siivota", "siivo + a + n"),
+    ("siivosin",   "siivota", "siivo + si + n"),
+    # kerätä — -ätä, no gradation
+    ("kerään",     "kerätä", "kerä + ä + n"),
+    ("keräämme",   "kerätä", "kerä + ä + mme"),
+    ("keräsin",    "kerätä", "kerä + si + n"),
+    # Clitics
+    ("pelasinko",  "pelata", "pela + si + n + ko"),
+    ("hyppäätkö",  "hypätä", "hyppä + ä + t + kö"),
+]
+
 # Fully irregular present-tense forms emitted as a single opaque chunk.
 PRESENT_IRREGULAR_FORMS = [
     ("on",       "olla", "on"),
@@ -247,6 +291,7 @@ ALL_CHAIN_CASES = (
     + PRESENT_GRADATION
     + PRESENT_IRREGULAR_FORMS
     + ALT_STEM_VERBS
+    + TYPE4_VERBS
 )
 
 

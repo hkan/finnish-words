@@ -217,6 +217,11 @@ def parse_analysis(raw: str) -> dict:
         number_type: str or None (if NUMTYPE tag present)
         adposition_type: str or None (if ADPTYPE tag present)
     """
+    # Omorfi occasionally emits a malformed tag like `[HOMONYM=2[UPOS=VERB]`
+    # where the HOMONYM tag is missing its closing bracket and the next
+    # tag begins inside it. Repair before regex tokenisation so UPOS and
+    # subsequent features still parse.
+    raw = re.sub(r"\[HOMONYM=(\d+)\[", r"[HOMONYM=\1][", raw)
     tags = re.findall(r"\[([^\]]+)\]", raw)
     
     result = {
