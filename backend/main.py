@@ -410,6 +410,18 @@ def analyse(word: str):
     # Sort: readings with a built morpheme chain come first. Stable otherwise.
     unique.sort(key=lambda r: 0 if r.get("segments") else 1)
 
+    # Drop shadow readings: if a (word_id, upos) already has a chain reading,
+    # hide its chainless siblings (usually Omorfi's quirky alt-feature parses
+    # like PERS=SG0 mirroring SG3).
+    chained_keys = {
+        (r.get("word_id"), r.get("upos"))
+        for r in unique if r.get("segments")
+    }
+    unique = [
+        r for r in unique
+        if r.get("segments") or (r.get("word_id"), r.get("upos")) not in chained_keys
+    ]
+
     return {"word": word, "unknown": False, "readings": unique}
 
 
