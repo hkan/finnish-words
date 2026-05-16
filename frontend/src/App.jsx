@@ -50,18 +50,12 @@ function Reading({ reading, word, animate }) {
 }
 
 export default function App() {
-  const [word, setWord] = useState("")
+  const params = new URLSearchParams(window.location.search)
+  const queryWord = params.get("word")
+
+  const [word, setWord] = useState(queryWord)
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
-
-  // Initialize from URL query params on mount
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const queryWord = params.get("word")
-    if (queryWord) {
-      setWord(queryWord)
-    }
-  }, [])
 
   // Sync word to URL query params
   useEffect(() => {
@@ -72,7 +66,7 @@ export default function App() {
       params.delete("word")
     }
     const newUrl = `${window.location.pathname}${params.toString() ? "?" + params.toString() : ""}`
-    window.history.replaceState({}, "", newUrl)
+    window.history.pushState({}, "", newUrl)
   }, [word])
 
   async function fetchAnalysis(w) {
