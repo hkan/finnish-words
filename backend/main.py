@@ -16,8 +16,8 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)s\t%(message)s")
 async def lifespan(app: FastAPI):
     global ready
     logging.debug("Loading omorfi files")
-    omorfi.load_analyser("/app/src/generated/omorfi.analyse.hfst")
-    logging.debug("Loaded omorfi.analyse.hfst")
+    omorfi.load_analyser("/app/src/generated/omorfi.describe.hfst")
+    logging.debug("Loaded omorfi.describe.hfst")
     omorfi.load_labelsegmenter("/app/src/generated/omorfi.labelsegment.hfst")
     logging.debug("Loaded omorfi.labelsegment.hfst")
     ready = True
