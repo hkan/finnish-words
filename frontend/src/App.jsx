@@ -43,7 +43,7 @@ const UI = {
     dictionaryForm: "sözlük biçimi",
     example: "Örnek",
     unknownWord: "Bilinmeyen kelime.",
-    inputHint: "bir Fince kelime, küçük harfle, noktalama işareti olmadan",
+    inputHint: "tek kelime, sadece a-z, noktalama işareti olmadan",
     placeholder: "Bir Fince kelime yazın…",
     credits: "Fince dilbilgisi terminolojisi kaynağı:",
     githubLabel: "GitHub'da görüntüle",
