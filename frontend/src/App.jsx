@@ -168,12 +168,24 @@ function Reading({ reading, word, animate, ui }) {
                   <span className="step-morph">{s.surface}</span>
                   {j > 0 && <span className="step-arrow">  →  {cumulative}</span>}
                   {s.translation && (
-                    <span 
-                      className="step-translation"
-                      title={s.translation_note || undefined}
-                    >
-                      {s.translation}
-                    </span>
+                    s.translation_link ? (
+                      <a
+                        href={s.translation_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="step-translation step-translation--link"
+                        title={s.translation_note || undefined}
+                      >
+                        {s.translation}
+                      </a>
+                    ) : (
+                      <span 
+                        className="step-translation"
+                        title={s.translation_note || undefined}
+                      >
+                        {s.translation}
+                      </span>
+                    )
                   )}
                 </div>
                 {s.label && <div className="step-label">{s.label}</div>}

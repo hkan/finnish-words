@@ -63,6 +63,10 @@ def test_non_ko_clitic_shows_hint():
     assert clitic['translation'] == '(emphasis)'
     assert 'translation_note' in clitic
     assert 'emphatic' in clitic['translation_note']
+    
+    # Should have documentation link for -han
+    assert 'translation_link' in clitic
+    assert 'uusikielemme.fi' in clitic['translation_link']
 
 
 def test_stacked_clitics_han_ko():

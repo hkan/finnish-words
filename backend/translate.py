@@ -14,17 +14,26 @@ from typing import Optional
 
 
 # Clitic meanings (for non-KO clitics)
+# Tuple: (short_hint, explanation, optional_url)
 CLITIC_HINTS = {
-    "han": ("(emphasis)", "emphatic particle: adds confirmation or emphasis"),
-    "hän": ("(emphasis)", "emphatic particle: adds confirmation or emphasis"),
-    "pa": ("(contrast)", "contrastive particle: 'though', 'on the other hand'"),
-    "pä": ("(contrast)", "contrastive particle: 'though', 'on the other hand'"),
-    "ka": ("(also/too)", "emphatic particle: 'also', 'too'"),
-    "kä": ("(also/too)", "emphatic particle: 'also', 'too'"),
-    "kin": ("(also/even)", "'also', 'even', 'too'"),
-    "kaan": ("(either/not even)", "negative polarity: 'either', 'not even'"),
-    "kään": ("(either/not even)", "negative polarity: 'either', 'not even'"),
-    "s": ("(colloquial)", "colloquial particle"),
+    "han": (
+        "(emphasis)",
+        "emphatic particle: adds confirmation or emphasis",
+        "https://uusikielemme.fi/finnish-grammar/syntax/liitepartikkelit/han-han-liitepartikkeli-clitic-minahan-sanoin"
+    ),
+    "hän": (
+        "(emphasis)",
+        "emphatic particle: adds confirmation or emphasis",
+        "https://uusikielemme.fi/finnish-grammar/syntax/liitepartikkelit/han-han-liitepartikkeli-clitic-minahan-sanoin"
+    ),
+    "pa": ("(contrast)", "contrastive particle: 'though', 'on the other hand'", None),
+    "pä": ("(contrast)", "contrastive particle: 'though', 'on the other hand'", None),
+    "ka": ("(also/too)", "emphatic particle: 'also', 'too'", None),
+    "kä": ("(also/too)", "emphatic particle: 'also', 'too'", None),
+    "kin": ("(also/even)", "'also', 'even', 'too'", None),
+    "kaan": ("(either/not even)", "negative polarity: 'either', 'not even'", None),
+    "kään": ("(either/not even)", "negative polarity: 'either', 'not even'", None),
+    "s": ("(colloquial)", "colloquial particle", None),
 }
 
 # Subject pronouns for each person
@@ -225,6 +234,8 @@ def annotate_segments(segments: list[dict], lemma: str, features: dict,
             if hint_info:
                 seg["translation"] = hint_info[0]
                 seg["translation_note"] = hint_info[1]
+                if len(hint_info) > 2 and hint_info[2]:
+                    seg["translation_link"] = hint_info[2]
             else:
                 seg["translation"] = None
         else:
