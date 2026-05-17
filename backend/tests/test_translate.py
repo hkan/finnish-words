@@ -6,7 +6,7 @@ import pytest
 
 def test_import():
     """Basic import test."""
-    from backend.translate import segment_translations
+    from translate import segment_translations
 
 
 class TestSegmentTranslations:
@@ -14,11 +14,11 @@ class TestSegmentTranslations:
     
     def test_kirjoittaa_past_sg1(self):
         """kirjoittaa PAST SG1 → 'I wrote'"""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"kirjoittaa": "to write"}
         past_translations = {"kirjoittaa": "wrote"}
-        features = {"TENSE": "PAST", "PERSON": "SG1"}
+        features = {"TENSE": "PAST", "PERS": "SG1"}
         
         result = segment_translations("kirjoittaa", features, translations, past_translations)
         
@@ -28,11 +28,11 @@ class TestSegmentTranslations:
     
     def test_syntya_past_sg1(self):
         """syntyä PAST SG1 → 'I was born'"""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"syntyä": "to be born"}
         past_translations = {"syntyä": "was born"}
-        features = {"TENSE": "PAST", "PERSON": "SG1"}
+        features = {"TENSE": "PAST", "PERS": "SG1"}
         
         result = segment_translations("syntyä", features, translations, past_translations)
         
@@ -42,11 +42,11 @@ class TestSegmentTranslations:
     
     def test_syntya_past_pl1(self):
         """syntyä PAST PL1 → 'we were born'"""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"syntyä": "to be born"}
         past_translations = {"syntyä": "was born"}
-        features = {"TENSE": "PAST", "PERSON": "PL1"}
+        features = {"TENSE": "PAST", "PERS": "PL1"}
         
         result = segment_translations("syntyä", features, translations, past_translations)
         
@@ -56,11 +56,11 @@ class TestSegmentTranslations:
     
     def test_menna_past_sg2(self):
         """mennä PAST SG2 → 'you went'"""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"mennä": "to go"}
         past_translations = {"mennä": "went"}
-        features = {"TENSE": "PAST", "PERSON": "SG2"}
+        features = {"TENSE": "PAST", "PERS": "SG2"}
         
         result = segment_translations("mennä", features, translations, past_translations)
         
@@ -70,11 +70,11 @@ class TestSegmentTranslations:
     
     def test_olla_past_sg3(self):
         """olla PAST SG3 → 'he/she was'"""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"olla": "to be"}
         past_translations = {"olla": "was"}
-        features = {"TENSE": "PAST", "PERSON": "SG3"}
+        features = {"TENSE": "PAST", "PERS": "SG3"}
         
         result = segment_translations("olla", features, translations, past_translations)
         
@@ -84,11 +84,11 @@ class TestSegmentTranslations:
     
     def test_kirjoittaa_past_sg1_question(self):
         """kirjoittaa PAST SG1 + question → 'did I write?'"""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"kirjoittaa": "to write"}
         past_translations = {"kirjoittaa": "wrote"}
-        features = {"TENSE": "PAST", "PERSON": "SG1", "CLITIC": "KO"}
+        features = {"TENSE": "PAST", "PERS": "SG1", "CLITIC": "KO"}
         
         result = segment_translations("kirjoittaa", features, translations, past_translations)
         
@@ -99,11 +99,11 @@ class TestSegmentTranslations:
     
     def test_syntya_past_sg1_question(self):
         """syntyä PAST SG1 + question → 'was I born?'"""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"syntyä": "to be born"}
         past_translations = {"syntyä": "was born"}
-        features = {"TENSE": "PAST", "PERSON": "SG1", "CLITIC": "KO"}
+        features = {"TENSE": "PAST", "PERS": "SG1", "CLITIC": "KO"}
         
         result = segment_translations("syntyä", features, translations, past_translations)
         
@@ -114,11 +114,11 @@ class TestSegmentTranslations:
     
     def test_olla_past_pl2(self):
         """olla PAST PL2 → 'you were' (plural)"""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"olla": "to be"}
         past_translations = {"olla": "was"}
-        features = {"TENSE": "PAST", "PERSON": "PL2"}
+        features = {"TENSE": "PAST", "PERS": "PL2"}
         
         result = segment_translations("olla", features, translations, past_translations)
         
@@ -128,11 +128,11 @@ class TestSegmentTranslations:
     
     def test_olla_past_pl3(self):
         """olla PAST PL3 → 'they were'"""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"olla": "to be"}
         past_translations = {"olla": "was"}
-        features = {"TENSE": "PAST", "PERSON": "PL3"}
+        features = {"TENSE": "PAST", "PERS": "PL3"}
         
         result = segment_translations("olla", features, translations, past_translations)
         
@@ -142,11 +142,11 @@ class TestSegmentTranslations:
     
     def test_unknown_lemma_no_crash(self):
         """Unknown lemma returns None for all fields, no crash."""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"kirjoittaa": "to write"}
         past_translations = {"kirjoittaa": "wrote"}
-        features = {"TENSE": "PAST", "PERSON": "SG1"}
+        features = {"TENSE": "PAST", "PERS": "SG1"}
         
         result = segment_translations("unknownverb", features, translations, past_translations)
         
@@ -157,11 +157,11 @@ class TestSegmentTranslations:
     
     def test_missing_past_translation(self):
         """Lemma with no past translation returns None for tense/person."""
-        from backend.translate import segment_translations
+        from translate import segment_translations
         
         translations = {"mennä": "to go"}
         past_translations = {}  # empty
-        features = {"TENSE": "PAST", "PERSON": "SG1"}
+        features = {"TENSE": "PAST", "PERS": "SG1"}
         
         result = segment_translations("mennä", features, translations, past_translations)
         
@@ -175,7 +175,7 @@ class TestAnnotateSegments:
     
     def test_annotate_segments_basic(self):
         """Test basic segment annotation."""
-        from backend.translate import annotate_segments
+        from translate import annotate_segments
         
         segments = [
             {"role": "stem", "surface": "kirjoit"},
@@ -185,7 +185,7 @@ class TestAnnotateSegments:
         
         translations = {"kirjoittaa": "to write"}
         past_translations = {"kirjoittaa": "wrote"}
-        features = {"TENSE": "PAST", "PERSON": "SG1"}
+        features = {"TENSE": "PAST", "PERS": "SG1"}
         
         annotate_segments(segments, "kirjoittaa", features, translations, past_translations)
         
@@ -195,7 +195,7 @@ class TestAnnotateSegments:
     
     def test_annotate_segments_with_question(self):
         """Test segment annotation with question clitic."""
-        from backend.translate import annotate_segments
+        from translate import annotate_segments
         
         segments = [
             {"role": "stem", "surface": "kirjoit"},
@@ -206,7 +206,7 @@ class TestAnnotateSegments:
         
         translations = {"kirjoittaa": "to write"}
         past_translations = {"kirjoittaa": "wrote"}
-        features = {"TENSE": "PAST", "PERSON": "SG1", "CLITIC": "KO"}
+        features = {"TENSE": "PAST", "PERS": "SG1", "CLITIC": "KO"}
         
         annotate_segments(segments, "kirjoittaa", features, translations, past_translations)
         
@@ -217,7 +217,7 @@ class TestAnnotateSegments:
     
     def test_annotate_segments_missing_data(self):
         """Test that missing translations don't crash, just skip."""
-        from backend.translate import annotate_segments
+        from translate import annotate_segments
         
         segments = [
             {"role": "stem", "surface": "xxx"},
@@ -226,7 +226,7 @@ class TestAnnotateSegments:
         
         translations = {}
         past_translations = {}
-        features = {"TENSE": "PAST", "PERSON": "SG1"}
+        features = {"TENSE": "PAST", "PERS": "SG1"}
         
         # Should not crash
         annotate_segments(segments, "unknown", features, translations, past_translations)
