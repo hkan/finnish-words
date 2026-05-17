@@ -26,13 +26,33 @@ CLITIC_HINTS = {
         "emphatic particle: adds confirmation or emphasis",
         "https://uusikielemme.fi/finnish-grammar/syntax/liitepartikkelit/han-han-liitepartikkeli-clitic-minahan-sanoin"
     ),
-    "pa": ("(contrast)", "contrastive particle: 'though', 'on the other hand'", None),
-    "pä": ("(contrast)", "contrastive particle: 'though', 'on the other hand'", None),
+    "pa": (
+        "(contrast)",
+        "contrastive particle: 'though', 'on the other hand'",
+        "https://uusikielemme.fi/finnish-grammar/syntax/constructions/pa-pa-liitepartikkeli-clitic-onpa-vaikeaa"
+    ),
+    "pä": (
+        "(contrast)",
+        "contrastive particle: 'though', 'on the other hand'",
+        "https://uusikielemme.fi/finnish-grammar/syntax/constructions/pa-pa-liitepartikkeli-clitic-onpa-vaikeaa"
+    ),
     "ka": ("(also/too)", "emphatic particle: 'also', 'too'", None),
     "kä": ("(also/too)", "emphatic particle: 'also', 'too'", None),
-    "kin": ("(also/even)", "'also', 'even', 'too'", None),
-    "kaan": ("(either/not even)", "negative polarity: 'either', 'not even'", None),
-    "kään": ("(either/not even)", "negative polarity: 'either', 'not even'", None),
+    "kin": (
+        "(also/even)",
+        "'also', 'even', 'too'",
+        "https://uusikielemme.fi/finnish-grammar/syntax/liitepartikkelit/kin-kaan-liitepartikkeli-clitic-minakin-minakaan"
+    ),
+    "kaan": (
+        "(either/not even)",
+        "negative polarity: 'either', 'not even'",
+        "https://uusikielemme.fi/finnish-grammar/syntax/liitepartikkelit/kin-kaan-liitepartikkeli-clitic-minakin-minakaan"
+    ),
+    "kään": (
+        "(either/not even)",
+        "negative polarity: 'either', 'not even'",
+        "https://uusikielemme.fi/finnish-grammar/syntax/liitepartikkelit/kin-kaan-liitepartikkeli-clitic-minakin-minakaan"
+    ),
     "s": ("(colloquial)", "colloquial particle", None),
 }
 

@@ -69,6 +69,30 @@ def test_non_ko_clitic_shows_hint():
     assert 'uusikielemme.fi' in clitic['translation_link']
 
 
+def test_kaan_clitic_has_link():
+    """The -kaan/-kään clitic should have documentation link."""
+    features = {'TENSE': 'PAST', 'PERS': 'SG1', 'MOOD': 'INDV', 'VOICE': 'ACT'}
+    segments = build_segments(
+        surface='kirjoitinkaan',
+        root='kirjoitta',
+        upos='VERB',
+        features=features,
+        lemma='kirjoittaa',
+        lang='en',
+        translations=TRANSLATIONS,
+        past_translations=PAST_TRANSLATIONS
+    )
+    
+    assert segments is not None
+    
+    clitic = next((s for s in segments if s['role'] == 'clitic'), None)
+    assert clitic is not None
+    assert clitic['surface'] in ['kaan', 'kään']
+    assert clitic['translation'] == '(either/not even)'
+    assert 'translation_link' in clitic
+    assert 'kin-kaan' in clitic['translation_link']
+
+
 def test_stacked_clitics_han_ko():
     """With stacked clitics like -han-kö, -han gets hint, -kö gets question."""
     features = {'TENSE': 'PAST', 'PERS': 'SG1', 'MOOD': 'INDV', 'VOICE': 'ACT'}
@@ -156,7 +180,7 @@ def test_conditional_mood_not_supported():
 
 
 def test_kin_clitic_shows_also():
-    """The -kin clitic should show '(also/even)' hint."""
+    """The -kin clitic should show '(also/even)' hint with documentation link."""
     features = {'TENSE': 'PAST', 'PERS': 'SG1', 'MOOD': 'INDV', 'VOICE': 'ACT'}
     segments = build_segments(
         surface='kirjoitinkin',
@@ -176,10 +200,12 @@ def test_kin_clitic_shows_also():
     assert clitic['surface'] == 'kin'
     assert clitic['translation'] == '(also/even)'
     assert 'also' in clitic['translation_note']
+    assert 'translation_link' in clitic
+    assert 'kin-kaan' in clitic['translation_link']
 
 
 def test_pa_clitic_shows_contrast():
-    """The -pa clitic should show '(contrast)' hint."""
+    """The -pa clitic should show '(contrast)' hint with documentation link."""
     features = {'TENSE': 'PAST', 'PERS': 'SG1', 'MOOD': 'INDV', 'VOICE': 'ACT'}
     segments = build_segments(
         surface='kirjoitinpa',
@@ -199,3 +225,5 @@ def test_pa_clitic_shows_contrast():
     assert clitic['surface'] == 'pa'
     assert clitic['translation'] == '(contrast)'
     assert 'contrast' in clitic['translation_note'].lower()
+    assert 'translation_link' in clitic
+    assert 'uusikielemme.fi' in clitic['translation_link']
