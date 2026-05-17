@@ -4,12 +4,12 @@ Extract Finnish → English glosses from a kaikki.fi Wiktionary JSONL dump.
 
 Usage:
     # Extract Finnish → English glosses:
-    python scripts/build_translations.py \
+    python tools/build_translations.py \
         --input kaikki.org-dictionary-Finnish.jsonl \
         --output backend/data/fi_en.json
 
     # Extract Finnish verb → English past tense:
-    python scripts/build_translations.py \
+    python tools/build_translations.py \
         --input kaikki.org-dictionary-Finnish.jsonl \
         --output backend/data/fi_en.json \
         --en-input kaikki.org-dictionary-English.jsonl \

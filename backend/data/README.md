@@ -19,7 +19,7 @@ These derived files maintain the same license.
 ### Attribution
 - Source: English Wiktionary (https://en.wiktionary.org)
 - Extraction: kaikki.org (https://kaikki.org/dictionary/Finnish/)
-- Processing: `scripts/build_translations.py` in this repository
+- Processing: `tools/build_translations.py` in this repository
 
 ## Generation
 
@@ -31,11 +31,11 @@ To regenerate these files:
 
 2. Run the extraction script:
 ```bash
-python3 scripts/build_translations.py \
+python3 tools/build_translations.py \
   --input kaikki.org-dictionary-Finnish.jsonl \
   --output backend/data/fi_en.json \
   --en-input kaikki.org-dictionary-English.jsonl \
   --past-output backend/data/fi_en_past.json
 ```
 
-See `scripts/build_translations.py` for implementation details.
+See `tools/build_translations.py` and `tools/README.md` for details.
