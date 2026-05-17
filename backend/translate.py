@@ -186,9 +186,13 @@ def annotate_segments(segments: list[dict], lemma: str, features: dict,
         return
     
     # Check if there's a KO clitic in the segments
-    has_ko_clitic = any(seg.get("role") == "clitic" for seg in segments)
+    # KO has variants: ko, kö (vowel harmony)
+    has_ko_clitic = any(
+        seg.get("role") == "clitic" and seg.get("surface") in ["ko", "kö"]
+        for seg in segments
+    )
     
-    # Build features dict with CLITIC if we found one
+    # Build features dict with CLITIC if we found KO
     features_with_clitic = features.copy()
     if has_ko_clitic:
         features_with_clitic["CLITIC"] = "KO"
@@ -197,8 +201,11 @@ def annotate_segments(segments: list[dict], lemma: str, features: dict,
     
     for seg in segments:
         role = seg.get("role")
-        # Map clitic role to question translation
-        if role == "clitic":
+        # Only KO clitic gets question translation
+        if role == "clitic" and seg.get("surface") in ["ko", "kö"]:
             seg["translation"] = trans_map.get("question")
+        elif role == "clitic":
+            # Other clitics (han, pa, kin, etc.) get no translation
+            seg["translation"] = None
         else:
             seg["translation"] = trans_map.get(role)
