@@ -240,7 +240,6 @@ header {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
 }
 
 .lemma-form {
@@ -272,12 +271,14 @@ header {
   flex-direction: column;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 .features-fallback {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+  margin-top: 1rem;
 }
 
 .feature-tag {
