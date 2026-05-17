@@ -110,6 +110,24 @@ The tool relies on [Voikko](https://voikko.puimula.org/) for morphological analy
 
 **What this means:** Most verbs will show progressive English translations, but many nouns, adjectives, and other word types won't. When translations aren't available, you'll still see the morpheme segments and grammatical labels—just not the English meaning.
 
+**Translation data size:**
+- Basic glosses: 250,939 entries (12 MB)
+- Past tense phrases: 68,042 entries (2.3 MB)
+
+## Feature Support Matrix
+
+| Feature | Segmentation | Translations | Notes |
+|---------|-------------|--------------|-------|
+| **Past tense (active)** | ✅ Full | ✅ Full | All persons, all verb types |
+| **Present tense (active)** | ✅ Full | ⚠️ Partial | Segments shown, translations not yet implemented |
+| **Passive voice** | ❌ None | ❌ None | Detected but not segmented |
+| **Other moods** | ❌ None | ❌ None | Conditional, imperative, potential not supported |
+| **Infinitives** | ❌ None | ❌ None | Not segmented |
+| **Nouns/Adjectives** | ❌ None | ⚠️ Dict only | Dictionary translation only, no case segmentation |
+| **Clitics** | ✅ Full | ✅ Full | All clitics, stacks, documentation links |
+| **Irregular verbs** | ✅ Full | ✅ Full | olla, tehdä, nähdä, syödä, etc. |
+| **Gradation** | ✅ Full | ✅ Full | All consonant gradation patterns |
+
 ## How It Works
 
 ### Architecture
