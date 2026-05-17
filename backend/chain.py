@@ -1,5 +1,6 @@
 from typing import Optional
 from i18n import t
+from translate import annotate_segments
 
 # Clitic surface variants (vowel-harmony pairs). Back-harmonic listed first;
 # match against the actual word so we pick the surface that's present.
@@ -244,7 +245,9 @@ def _pop_from_end(word: str, candidates: list[str]) -> Optional[tuple[str, str]]
 
 def build_segments(surface: str, root: str, upos: str, features: dict,
                    lemma: Optional[str] = None,
-                   lang: str = "en") -> Optional[list[dict]]:
+                   lang: str = "en",
+                   translations: Optional[dict[str, str]] = None,
+                   past_translations: Optional[dict[str, str]] = None) -> Optional[list[dict]]:
     """
     Build an ordered list of morpheme segments for a surface word.
     Returns None when we can't reliably segment (e.g. unsupported tense/mood).
@@ -283,10 +286,17 @@ def build_segments(surface: str, root: str, upos: str, features: dict,
         })
 
     if tense == "PAST":
-        return _build_past(work, root, features, lemma, segments_rev, lang)
-    if tense in ("PRES", "PRESENT"):
-        return _build_present(work, root, features, lemma, segments_rev, lang)
-    return None
+        segments = _build_past(work, root, features, lemma, segments_rev, lang)
+    elif tense in ("PRES", "PRESENT"):
+        segments = _build_present(work, root, features, lemma, segments_rev, lang)
+    else:
+        return None
+    
+    # Annotate segments with translations if available
+    if segments and lemma and translations and past_translations:
+        annotate_segments(segments, lemma, features, translations, past_translations)
+    
+    return segments
 
 
 def _build_past(work, root, features, lemma, segments_rev, lang):

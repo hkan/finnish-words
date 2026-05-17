@@ -15,10 +15,13 @@ voikko = Voikko("fi")
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)s\t%(message)s")
 
 _TRANSLATIONS: dict[str, str] = {}
+_PAST_TRANSLATIONS: dict[str, str] = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _TRANSLATIONS
+    global _TRANSLATIONS, _PAST_TRANSLATIONS
+    
+    # Load Finnish → English glosses
     data_file = Path(__file__).parent / "data" / "fi_en.json"
     if data_file.exists():
         import json as _json
@@ -26,6 +29,15 @@ async def lifespan(app: FastAPI):
         logging.info("Loaded %d translations", len(_TRANSLATIONS))
     else:
         logging.warning("fi_en.json not found — translations disabled")
+    
+    # Load Finnish → English past tense phrases
+    past_file = Path(__file__).parent / "data" / "fi_en_past.json"
+    if past_file.exists():
+        _PAST_TRANSLATIONS = _json.loads(past_file.read_text(encoding="utf-8"))
+        logging.info("Loaded %d past translations", len(_PAST_TRANSLATIONS))
+    else:
+        logging.warning("fi_en_past.json not found — past tense translations disabled")
+    
     yield
 
 
@@ -204,7 +216,8 @@ def analyse(word: str, lang: str = "en"):
 
         root = get_verb_root(word_id) if upos in ("VERB", "AUX") and word_id else None
         segments = (
-            build_segments(lookup, root, upos, features, lemma=word_id, lang=lang)
+            build_segments(lookup, root, upos, features, lemma=word_id, lang=lang,
+                         translations=_TRANSLATIONS, past_translations=_PAST_TRANSLATIONS)
             if root else None
         )
 
