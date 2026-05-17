@@ -1,5 +1,8 @@
 .claude/settings.local.json
 
+# Kaikki.org JSONL dumps (large files)
+*.jsonl
+
 # Node
 node_modules/
 
