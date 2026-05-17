@@ -186,7 +186,10 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.lang = lang
-  }, [lang])
+    document.title = word.trim()
+      ? `${word.trim()} – ${UI[lang].appName}`
+      : UI[lang].appName
+  }, [lang, word])
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") setDrawerOpen(false) }
