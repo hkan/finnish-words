@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react"
 import "./App.css"
 
+const GITHUB_URL = "https://github.com/hkan/finnish-words"
+
 const UI = {
   en: {
     appName: "Finnish Word Breakdown",
@@ -10,6 +12,8 @@ const UI = {
     inputHint: "one Finnish word, lowercase, no punctuation",
     placeholder: "Type a Finnish word…",
     credits: "Finnish terminology from",
+    githubLabel: "See on GitHub",
+    githubSub: "report issues here",
     exampleSegments: [
       { surface: "tie", role: "stem",   label: "root" },
       { surface: "si",  role: "tense",  label: "past tense marker (-si)" },
@@ -25,6 +29,8 @@ const UI = {
     inputHint: "yksi suomen sana, pienillä kirjaimilla, ilman välimerkkejä",
     placeholder: "Kirjoita suomen sana…",
     credits: "Suomen kielioppitieto lähteestä",
+    githubLabel: "Githubissa",
+    githubSub: "ongelmat raportoidaan täällä",
     exampleSegments: [
       { surface: "tie", role: "stem",   label: "vartalo" },
       { surface: "si",  role: "tense",  label: "imperfektin tunnus (-si)" },
@@ -40,6 +46,8 @@ const UI = {
     inputHint: "bir Fince kelime, küçük harfle, noktalama işareti olmadan",
     placeholder: "Bir Fince kelime yazın…",
     credits: "Fince dilbilgisi terminolojisi kaynağı:",
+    githubLabel: "GitHub'da görüntüle",
+    githubSub: "sorunları buradan bildirin",
     exampleSegments: [
       { surface: "tie", role: "stem",   label: "kök" },
       { surface: "si",  role: "tense",  label: "geçmiş zaman eki (-si)" },
@@ -63,6 +71,62 @@ function getInitialLang() {
     getLangFromUrl() ||
     (SUPPORTED_LANGS.includes(localStorage.getItem("lang")) && localStorage.getItem("lang")) ||
     DEFAULT_LANG
+  )
+}
+
+function HamburgerIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="2" y="5"  width="16" height="1.5" rx="0.75" fill="currentColor"/>
+      <rect x="2" y="9.25" width="16" height="1.5" rx="0.75" fill="currentColor"/>
+      <rect x="2" y="13.5" width="16" height="1.5" rx="0.75" fill="currentColor"/>
+    </svg>
+  )
+}
+
+function Drawer({ open, onClose, ui, lang, onLangChange }) {
+  return (
+    <>
+      <div className={`drawer-backdrop${open ? " drawer-backdrop--open" : ""}`} onClick={onClose} />
+      <div className={`drawer${open ? " drawer--open" : ""}`} role="dialog" aria-modal="true">
+        <div className="drawer-section">
+          <p className="drawer-label">Language</p>
+          <div className="drawer-lang-picker">
+            {SUPPORTED_LANGS.map(l => (
+              <button
+                key={l}
+                className={`lang-btn drawer-lang-btn${lang === l ? " lang-btn--active" : ""}`}
+                onClick={() => { onLangChange(l); onClose() }}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="drawer-section">
+          <p className="drawer-label">Credits</p>
+          <p className="drawer-credits">
+            Finnish terminology from{" "}
+            <a href="https://uusikielemme.fi" target="_blank" rel="noopener noreferrer">
+              uusikielemme.fi
+            </a>
+          </p>
+        </div>
+
+        <div className="drawer-section">
+          <a
+            className="drawer-github"
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span className="drawer-github-label">{ui.githubLabel}</span>
+            <span className="drawer-github-sub">↖ {ui.githubSub}</span>
+          </a>
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -118,6 +182,17 @@ export default function App() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [lang, setLang] = useState(getInitialLang)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  useEffect(() => {
+    document.documentElement.lang = lang
+  }, [lang])
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") setDrawerOpen(false) }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
 
   const ui = UI[lang] || UI[DEFAULT_LANG]
 
@@ -215,18 +290,18 @@ export default function App() {
     <main>
       <header>
         <span className="app-name">{ui.appName}</span>
-        <div className="lang-picker">
-          {SUPPORTED_LANGS.map(l => (
-            <button
-              key={l}
-              className={`lang-btn${lang === l ? " lang-btn--active" : ""}`}
-              onClick={() => handleLangChange(l)}
-            >
-              {l.toUpperCase()}
-            </button>
-          ))}
-        </div>
+        <button className="menu-btn" onClick={() => setDrawerOpen(true)} aria-label="Menu">
+          <HamburgerIcon />
+        </button>
       </header>
+
+      <Drawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        ui={ui}
+        lang={lang}
+        onLangChange={handleLangChange}
+      />
 
       <div className="results">
         {showExample && (
@@ -255,12 +330,6 @@ export default function App() {
       </div>
 
       <div className="input-bar">
-        <p className="credits">
-          {ui.credits}{" "}
-          <a href="https://uusikielemme.fi" target="_blank" rel="noopener noreferrer">
-            uusikielemme.fi
-          </a>
-        </p>
         <p className="input-hint">{ui.inputHint}</p>
         <input
           value={word}
