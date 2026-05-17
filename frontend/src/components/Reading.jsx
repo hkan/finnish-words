@@ -7,11 +7,13 @@ export default function Reading({ reading, word, animate, ui }) {
         <span className="word-surface">{word}</span>
       </div>
       {reading.word_id && (
-        <div className="lemma-row">
-          <span className="lemma-form">{reading.word_id}</span>
-          <span className="lemma-label">{ui.dictionaryForm}</span>
+        <div className="lemma-block">
+          <div className="lemma-row">
+            <span className="lemma-form">{reading.word_id}</span>
+            <span className="lemma-label">{ui.dictionaryForm}</span>
+          </div>
           {reading.translation && (
-            <span className="lemma-translation">{reading.translation}</span>
+            <div className="lemma-translation">{reading.translation}</div>
           )}
         </div>
       )}
@@ -28,7 +30,8 @@ export default function Reading({ reading, word, animate, ui }) {
                 <div className="step-surface">
                   {j > 0 && <span className="step-plus">+ </span>}
                   <span className="step-morph">{s.surface}</span>
-                  {j > 0 && <span className="step-arrow">  →  {cumulative}</span>}
+                  {j > 0 && <span className="step-arrow">→  {cumulative}</span>}
+                  {s.label && <span className="step-label">{s.label}</span>}
                 </div>
                 {s.translation && (
                   <div className="step-translation">
@@ -49,7 +52,6 @@ export default function Reading({ reading, word, animate, ui }) {
                     )}
                   </div>
                 )}
-                {s.label && <div className="step-label">{s.label}</div>}
               </div>
             )
           })}
