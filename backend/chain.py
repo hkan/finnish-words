@@ -249,12 +249,13 @@ def _add_person(segments_rev: list, surface: str, pers: str, lang: str) -> None:
     })
 
 
-def _add_tense(segments_rev: list, surface: str, lang: str) -> None:
-    """Append a present tense marker segment."""
+def _add_tense(segments_rev: list, surface: str, lang: str, is_past: bool = False) -> None:
+    """Append a tense marker segment."""
+    key = "tense.past_marker" if is_past else "tense.present_marker"
     segments_rev.append({
         "surface": surface,
         "role": "tense",
-        "label": t("tense.present_marker", lang, surface=surface),
+        "label": t(key, lang, surface=surface),
     })
 
 
@@ -322,11 +323,7 @@ def _build_past(work, root, features, lemma, segments_rev, lang):
             return None
         pers_surface, work = popped
         if pers_surface:
-            segments_rev.append({
-                "surface": pers_surface,
-                "role": "person",
-                "label": t(f"person.{pers}", lang),
-            })
+            _add_person(segments_rev, pers_surface, pers, lang)
 
     # Pick the stem that actually appears in the surface. Priority:
     # 1. Irregular past-stem override (e.g. syödä → sö)
@@ -362,13 +359,9 @@ def _build_past(work, root, features, lemma, segments_rev, lang):
         return None
     tense_surface = work[len(stem_used):]
     if tense_surface:
-        segments_rev.append({
-            "surface": tense_surface,
-            "role": "tense",
-            "label": t("tense.past_marker", lang, surface=tense_surface),
-        })
+        _add_tense(segments_rev, tense_surface, lang, is_past=True)
 
-    segments_rev.append({"surface": stem_used, "role": "stem", "label": t("stem.root", lang)})
+    _add_stem(segments_rev, stem_used, lang)
 
     return list(reversed(segments_rev))
 
