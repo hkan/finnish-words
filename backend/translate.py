@@ -13,6 +13,20 @@ import re
 from typing import Optional
 
 
+# Clitic meanings (for non-KO clitics)
+CLITIC_HINTS = {
+    "han": ("(emphasis)", "emphatic particle: adds confirmation or emphasis"),
+    "hän": ("(emphasis)", "emphatic particle: adds confirmation or emphasis"),
+    "pa": ("(contrast)", "contrastive particle: 'though', 'on the other hand'"),
+    "pä": ("(contrast)", "contrastive particle: 'though', 'on the other hand'"),
+    "ka": ("(also/too)", "emphatic particle: 'also', 'too'"),
+    "kä": ("(also/too)", "emphatic particle: 'also', 'too'"),
+    "kin": ("(also/even)", "'also', 'even', 'too'"),
+    "kaan": ("(either/not even)", "negative polarity: 'either', 'not even'"),
+    "kään": ("(either/not even)", "negative polarity: 'either', 'not even'"),
+    "s": ("(colloquial)", "colloquial particle"),
+}
+
 # Subject pronouns for each person
 SUBJECTS = {
     "SG1": "I",
@@ -205,7 +219,13 @@ def annotate_segments(segments: list[dict], lemma: str, features: dict,
         if role == "clitic" and seg.get("surface") in ["ko", "kö"]:
             seg["translation"] = trans_map.get("question")
         elif role == "clitic":
-            # Other clitics (han, pa, kin, etc.) get no translation
-            seg["translation"] = None
+            # Other clitics get descriptive hint
+            surface = seg.get("surface", "")
+            hint_info = CLITIC_HINTS.get(surface)
+            if hint_info:
+                seg["translation"] = hint_info[0]
+                seg["translation_note"] = hint_info[1]
+            else:
+                seg["translation"] = None
         else:
             seg["translation"] = trans_map.get(role)

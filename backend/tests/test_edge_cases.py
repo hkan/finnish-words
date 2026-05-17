@@ -39,8 +39,8 @@ def test_present_tense_deferred():
     assert person['translation'] is None
 
 
-def test_non_ko_clitic_should_not_show_question():
-    """Non-KO clitics (like -han, -pa) should NOT show question translation."""
+def test_non_ko_clitic_shows_hint():
+    """Non-KO clitics (like -han, -pa) should show descriptive hint, not question."""
     features = {'TENSE': 'PAST', 'PERS': 'SG1', 'MOOD': 'INDV', 'VOICE': 'ACT'}
     segments = build_segments(
         surface='kirjoitinhan',
@@ -59,14 +59,14 @@ def test_non_ko_clitic_should_not_show_question():
     assert clitic is not None
     assert clitic['surface'] == 'han'
     
-    # BUG: Currently this returns "did I write?" but it shouldn't
-    # -han is emphatic, not interrogative
-    assert clitic['translation'] is None, \
-        f"Non-KO clitic should not have translation, got: {clitic['translation']}"
+    # Should have descriptive hint, not question form
+    assert clitic['translation'] == '(emphasis)'
+    assert 'translation_note' in clitic
+    assert 'emphatic' in clitic['translation_note']
 
 
-def test_stacked_clitics_only_last_ko_gets_question():
-    """With stacked clitics like -han-kö, only the KO should get question translation."""
+def test_stacked_clitics_han_ko():
+    """With stacked clitics like -han-kö, -han gets hint, -kö gets question."""
     features = {'TENSE': 'PAST', 'PERS': 'SG1', 'MOOD': 'INDV', 'VOICE': 'ACT'}
     segments = build_segments(
         surface='kirjoitinhankö',
@@ -84,10 +84,10 @@ def test_stacked_clitics_only_last_ko_gets_question():
     clitics = [s for s in segments if s['role'] == 'clitic']
     assert len(clitics) == 2
     
-    # First clitic (-han) should not have translation
+    # First clitic (-han) should have descriptive hint
     assert clitics[0]['surface'] in ['han', 'hän']
-    assert clitics[0]['translation'] is None, \
-        f"First clitic (-han) should not have translation, got: {clitics[0]['translation']}"
+    assert clitics[0]['translation'] == '(emphasis)'
+    assert 'translation_note' in clitics[0]
     
     # Second clitic (-kö) should have question translation
     assert clitics[1]['surface'] in ['ko', 'kö']
@@ -149,3 +149,49 @@ def test_conditional_mood_not_supported():
     
     # Conditional not supported in build_segments
     assert segments is None
+
+
+def test_kin_clitic_shows_also():
+    """The -kin clitic should show '(also/even)' hint."""
+    features = {'TENSE': 'PAST', 'PERS': 'SG1', 'MOOD': 'INDV', 'VOICE': 'ACT'}
+    segments = build_segments(
+        surface='kirjoitinkin',
+        root='kirjoitta',
+        upos='VERB',
+        features=features,
+        lemma='kirjoittaa',
+        lang='en',
+        translations=TRANSLATIONS,
+        past_translations=PAST_TRANSLATIONS
+    )
+    
+    assert segments is not None
+    
+    clitic = next((s for s in segments if s['role'] == 'clitic'), None)
+    assert clitic is not None
+    assert clitic['surface'] == 'kin'
+    assert clitic['translation'] == '(also/even)'
+    assert 'also' in clitic['translation_note']
+
+
+def test_pa_clitic_shows_contrast():
+    """The -pa clitic should show '(contrast)' hint."""
+    features = {'TENSE': 'PAST', 'PERS': 'SG1', 'MOOD': 'INDV', 'VOICE': 'ACT'}
+    segments = build_segments(
+        surface='kirjoitinpa',
+        root='kirjoitta',
+        upos='VERB',
+        features=features,
+        lemma='kirjoittaa',
+        lang='en',
+        translations=TRANSLATIONS,
+        past_translations=PAST_TRANSLATIONS
+    )
+    
+    assert segments is not None
+    
+    clitic = next((s for s in segments if s['role'] == 'clitic'), None)
+    assert clitic is not None
+    assert clitic['surface'] == 'pa'
+    assert clitic['translation'] == '(contrast)'
+    assert 'contrast' in clitic['translation_note'].lower()

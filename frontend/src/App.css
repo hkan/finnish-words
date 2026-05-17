@@ -338,6 +338,12 @@ header {
   font-weight: 400;
 }
 
+.step-translation[title] {
+  text-decoration: underline dotted;
+  text-decoration-color: #9ca3af;
+  cursor: help;
+}
+
 .step-label {
   font-size: 0.925rem;
   margin-top: 0.25rem;
