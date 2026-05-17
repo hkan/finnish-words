@@ -167,6 +167,7 @@ function Reading({ reading, word, animate, ui }) {
                   {j > 0 && <span className="step-plus">+ </span>}
                   <span className="step-morph">{s.surface}</span>
                   {j > 0 && <span className="step-arrow">  →  {cumulative}</span>}
+                  {s.translation && <span className="step-translation">{s.translation}</span>}
                 </div>
                 {s.label && <div className="step-label">{s.label}</div>}
               </div>
