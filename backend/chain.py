@@ -14,9 +14,9 @@ _CLITICS = {
     "S":    ["s"],
 }
 
-# Person endings in past indicative active.
-# SG3 has no separate ending — the bare past stem (root + i / root + si) is the form.
-_PERSON_PAST_ACTIVE = {
+# Person endings for active voice (both present and past).
+# SG3 often has no separate ending or is handled specially (vowel lengthening).
+_PERSON_ENDINGS = {
     "SG1": ["n"],
     "SG2": ["t"],
     "SG3": [""],
@@ -152,15 +152,6 @@ def _type4_stems(lemma: str) -> Optional[tuple[list[str], str]]:
         candidates.append(strong)
     return candidates, harmony
 
-
-_PERSON_PRES_ACTIVE = {
-    "SG1": ["n"],
-    "SG2": ["t"],
-    "SG3": [""],   # handled specially per inflection class (vowel lengthening)
-    "PL1": ["mme"],
-    "PL2": ["tte"],
-    "PL3": ["vat", "vät"],
-}
 
 
 # Lemmas whose present-tense forms are fully irregular for some person.
@@ -302,7 +293,7 @@ def build_segments(surface: str, root: str, upos: str, features: dict,
 def _build_past(work, root, features, lemma, segments_rev, lang):
     pers = features.get("PERS")
     if pers:
-        popped = _pop_from_end(work, _PERSON_PAST_ACTIVE.get(pers, []))
+        popped = _pop_from_end(work, _PERSON_ENDINGS.get(pers, []))
         if popped is None:
             return None
         pers_surface, work = popped
@@ -423,7 +414,7 @@ def _present_type1(work, lemma, pers, segments_rev, lang):
         segments_rev.append({"surface": strong, "role": "stem", "label": t("stem.root", lang)})
         return list(reversed(segments_rev))
 
-    popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
+    popped = _pop_from_end(work, _PERSON_ENDINGS.get(pers, []))
     if popped is None:
         return None
     pers_surface, work = popped
@@ -458,7 +449,7 @@ def _present_type2(work, root, pers, segments_rev, lang):
         segments_rev.append({"surface": root, "role": "stem", "label": t("stem.root", lang)})
         return list(reversed(segments_rev))
 
-    popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
+    popped = _pop_from_end(work, _PERSON_ENDINGS.get(pers, []))
     if popped is None:
         return None
     pers_surface, work = popped
@@ -495,7 +486,7 @@ def _present_alt(work, lemma, pers, segments_rev, lang):
         segments_rev.append({"surface": stem, "role": "stem", "label": t("stem.root", lang)})
         return list(reversed(segments_rev))
 
-    popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
+    popped = _pop_from_end(work, _PERSON_ENDINGS.get(pers, []))
     if popped is None:
         return None
     pers_surface, work = popped
@@ -535,7 +526,7 @@ def _present_type4(work, lemma, pers, segments_rev, lang):
                 return list(reversed(segments_rev))
         return None
 
-    popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
+    popped = _pop_from_end(work, _PERSON_ENDINGS.get(pers, []))
     if popped is None:
         return None
     pers_surface, work = popped
@@ -572,7 +563,7 @@ def _present_type3(work, root, pers, segments_rev, lang):
         segments_rev.append({"surface": root, "role": "stem", "label": t("stem.root", lang)})
         return list(reversed(segments_rev))
 
-    popped = _pop_from_end(work, _PERSON_PRES_ACTIVE.get(pers, []))
+    popped = _pop_from_end(work, _PERSON_ENDINGS.get(pers, []))
     if popped is None:
         return None
     pers_surface, work = popped
