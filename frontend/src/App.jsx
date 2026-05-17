@@ -112,6 +112,13 @@ function Drawer({ open, onClose, ui, lang, onLangChange }) {
               uusikielemme.fi
             </a>
           </p>
+          <p className="drawer-credits">
+            Translations from{" "}
+            <a href="https://en.wiktionary.org" target="_blank" rel="noopener noreferrer">
+              Wiktionary
+            </a>
+            {" "}(CC BY-SA 4.0)
+          </p>
         </div>
 
         <div className="drawer-section">
@@ -141,6 +148,9 @@ function Reading({ reading, word, animate, ui }) {
         <div className="lemma-row">
           <span className="lemma-form">{reading.word_id}</span>
           <span className="lemma-label">{ui.dictionaryForm}</span>
+          {reading.translation && (
+            <span className="lemma-translation">{reading.translation}</span>
+          )}
         </div>
       )}
       {segments ? (

@@ -14,9 +14,18 @@ voikko = Voikko("fi")
 
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)s\t%(message)s")
 
+_TRANSLATIONS: dict[str, str] = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global _TRANSLATIONS
+    data_file = Path(__file__).parent / "data" / "fi_en.json"
+    if data_file.exists():
+        import json as _json
+        _TRANSLATIONS = _json.loads(data_file.read_text(encoding="utf-8"))
+        logging.info("Loaded %d translations", len(_TRANSLATIONS))
+    else:
+        logging.warning("fi_en.json not found — translations disabled")
     yield
 
 
@@ -200,6 +209,8 @@ def analyse(word: str, lang: str = "en"):
         )
 
         reading: dict = {"word_id": word_id}
+        if word_id and word_id in _TRANSLATIONS:
+            reading["translation"] = _TRANSLATIONS[word_id]
         if root:
             reading["root"] = root
         if segments:

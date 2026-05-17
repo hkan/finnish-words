@@ -257,6 +257,13 @@ header {
   letter-spacing: 0.08em;
 }
 
+.lemma-translation {
+  font-size: 0.95rem;
+  color: #666;
+  margin-left: auto;
+  font-style: italic;
+}
+
 /* segment chips */
 
 .segments {
