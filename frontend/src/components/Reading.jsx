@@ -29,27 +29,26 @@ export default function Reading({ reading, word, animate, ui }) {
                   {j > 0 && <span className="step-plus">+ </span>}
                   <span className="step-morph">{s.surface}</span>
                   {j > 0 && <span className="step-arrow">  →  {cumulative}</span>}
-                  {s.translation && (
-                    s.translation_link ? (
+                </div>
+                {s.translation && (
+                  <div className="step-translation">
+                    {s.translation_link ? (
                       <a
                         href={s.translation_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="step-translation step-translation--link"
+                        className="step-translation-link"
                         title={s.translation_note || undefined}
                       >
                         {s.translation}
                       </a>
                     ) : (
-                      <span 
-                        className="step-translation"
-                        title={s.translation_note || undefined}
-                      >
+                      <span title={s.translation_note || undefined}>
                         {s.translation}
                       </span>
-                    )
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
                 {s.label && <div className="step-label">{s.label}</div>}
               </div>
             )
