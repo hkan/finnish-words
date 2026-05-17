@@ -224,7 +224,4 @@ This is primarily a personal learning project. While the code is open source, ac
 
 If you find issues or have suggestions, feel free to [open an issue](https://github.com/hkan/finnish-words/issues) on GitHub.
 
-## See Also
 
-- [SPEC.md](SPEC.md) — Detailed technical specification
-- [TRANSLATION_PLAN.md](TRANSLATION_PLAN.md) — Implementation plan for progressive translations feature
