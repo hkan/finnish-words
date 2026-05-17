@@ -58,7 +58,7 @@ export default function App() {
         onLangChange={wrappedLangChange}
       />
 
-      <ResultsDisplay word={word} result={result} loading={loading} ui={ui} />
+      <ResultsDisplay word={word} result={result} loading={loading} ui={ui} lang={lang} />
 
       <WordInput word={word} onChange={handleInputChange} ui={ui} />
     </main>

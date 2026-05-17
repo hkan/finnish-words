@@ -11,12 +11,6 @@ export const UI = {
     credits: "Finnish terminology from",
     githubLabel: "See on GitHub",
     githubSub: "report issues here",
-    exampleSegments: [
-      { surface: "tie", role: "stem",   label: "root" },
-      { surface: "si",  role: "tense",  label: "past tense marker (-si)" },
-      { surface: "t",   role: "person", label: "2nd person singular (you)" },
-      { surface: "kö",  role: "clitic", label: "question particle (-kö)" },
-    ],
   },
   fi: {
     appName: "Sanan rakenne",
@@ -28,12 +22,6 @@ export const UI = {
     credits: "Suomen kielioppitieto lähteestä",
     githubLabel: "Githubissa",
     githubSub: "ongelmat raportoidaan täällä",
-    exampleSegments: [
-      { surface: "tie", role: "stem",   label: "vartalo" },
-      { surface: "si",  role: "tense",  label: "imperfektin tunnus (-si)" },
-      { surface: "t",   role: "person", label: "2. yksikön persoona (sinä)" },
-      { surface: "kö",  role: "clitic", label: "kysymysliite (-kö)" },
-    ],
   },
   tr: {
     appName: "Fince Kelime Analizi",
@@ -45,12 +33,6 @@ export const UI = {
     credits: "Fince dilbilgisi terminolojisi kaynağı:",
     githubLabel: "GitHub'da görüntüle",
     githubSub: "sorunları buradan bildirin",
-    exampleSegments: [
-      { surface: "tie", role: "stem",   label: "kök" },
-      { surface: "si",  role: "tense",  label: "geçmiş zaman eki (-si)" },
-      { surface: "t",   role: "person", label: "2. tekil şahıs (sen)" },
-      { surface: "kö",  role: "clitic", label: "soru ekimi (-kö)" },
-    ],
   },
 }
 

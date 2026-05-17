@@ -1,12 +1,12 @@
 import Reading from "./Reading"
 import ExampleDisplay from "./ExampleDisplay"
 
-export default function ResultsDisplay({ word, result, loading, ui }) {
+export default function ResultsDisplay({ word, result, loading, ui, lang }) {
   const showExample = !word.trim() && !loading
 
   return (
     <div className="results">
-      {showExample && <ExampleDisplay ui={ui} />}
+      {showExample && <ExampleDisplay ui={ui} lang={lang} />}
 
       {loading && <p className="hint">…</p>}
 
